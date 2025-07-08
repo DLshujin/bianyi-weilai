@@ -49,95 +49,6 @@
             }
         }
     </style>
-    <script>
-    // 解析JSON字符串为对象
-    function parseJson(str) {
-        try { return JSON.parse(str); } catch { return {}; }
-    }
-    // 渲染字段对比表格
-    function renderDiff(before, after) {
-        let html = '<table class="diff-table"><tr><th>字段</th><th>变更前</th><th>变更后</th></tr>';
-        let keys = new Set([...Object.keys(before), ...Object.keys(after)]);
-        let changed = false;
-        keys.forEach(function(key) {
-            let b = before[key] === undefined ? '' : before[key];
-            let a = after[key] === undefined ? '' : after[key];
-            if (b != a) {
-                changed = true;
-                html += `<tr><td>${key}</td><td>${b}</td><td class="diff-changed">${a}</td></tr>`;
-            }
-        });
-        if (!changed) html += '<tr><td colspan="3" class="text-center text-muted">无变更</td></tr>';
-        html += '</table>';
-        return html;
-    }
-    // 分页与筛选
-    let currentPage = 1;
-    let pageSize = 10;
-    let logs = [];
-    let filteredLogs = [];
-    function renderTable() {
-        let tbody = document.getElementById('log-tbody');
-        tbody.innerHTML = '';
-        let start = (currentPage-1)*pageSize;
-        let end = start+pageSize;
-        let pageLogs = filteredLogs.slice(start, end);
-        pageLogs.forEach(function(log) {
-            let before = parseJson(log.before_content);
-            let after = parseJson(log.after_content);
-            let tag = log.operation_type === 'add' ? '<span class="tag-add">添加</span>' : (log.operation_type === 'edit' ? '<span class="tag-edit">修改</span>' : '<span class="tag-delete">删除</span>');
-            tbody.innerHTML += `<tr>
-                <td>${log.id}</td>
-                <td>${log.record_id}</td>
-                <td>${tag}</td>
-                <td>${log.operator}</td>
-                <td>${log.operation_time}</td>
-                <td>${renderDiff(before, after)}</td>
-            </tr>`;
-        });
-        renderPagination();
-    }
-    function renderPagination() {
-        let total = filteredLogs.length;
-        let totalPages = Math.ceil(total/pageSize);
-        let pag = document.getElementById('pagination');
-        pag.innerHTML = '';
-        for(let i=1;i<=totalPages;i++) {
-            pag.innerHTML += `<li class="page-item${i===currentPage?' active':''}"><a class="page-link" href="#" onclick="gotoPage(${i});return false;">${i}</a></li>`;
-        }
-    }
-    function gotoPage(page) { currentPage = page; renderTable(); }
-    function filterLogs() {
-        let type = document.getElementById('typeFilter').value;
-        let user = document.getElementById('userFilter').value.trim();
-        filteredLogs = logs.filter(function(log) {
-            let ok = true;
-            if(type && log.operation_type !== type) ok = false;
-            if(user && log.operator.indexOf(user) === -1) ok = false;
-            return ok;
-        });
-        currentPage = 1;
-        renderTable();
-    }
-    window.onload = function() {
-        logs = JSON.parse(document.getElementById('logs-data').textContent);
-        filteredLogs = logs;
-        renderTable();
-    }
-    function checkLandscape() {
-        var tip = document.getElementById('landscape-tip');
-        if (window.innerWidth < window.innerHeight) {
-            tip.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        } else {
-            tip.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    }
-    window.addEventListener('load', checkLandscape);
-    window.addEventListener('orientationchange', checkLandscape);
-    window.addEventListener('resize', checkLandscape);
-    </script>
 </head>
 <body>
 <div class="container">
@@ -179,12 +90,5 @@
     </div>
 </div>
 <pre id="logs-data" style="display:none">{{ logs|tojson }}</pre>
-<!-- 横屏提示遮罩 -->
-<div id="landscape-tip" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);color:#333;align-items:center;justify-content:center;text-align:center;font-size:1.3em;">
-  <div style="width:100%;">
-    <div style="font-size:2em; margin-bottom: 1em;">请横屏浏览</div>
-    <div>为获得最佳体验，请将手机旋转到横屏模式</div>
-  </div>
-</div>
 </body>
 </html> 

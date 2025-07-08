@@ -132,26 +132,6 @@ function toggleTheme() {
 window.onload = function() {
     if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 }
-function checkLandscape() {
-    var tip = document.getElementById('landscape-tip');
-    if (window.innerWidth < window.innerHeight) {
-        tip.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    } else {
-        tip.style.display = 'none';
-        document.body.style.overflow = '';
-    }
-}
-window.addEventListener('load', checkLandscape);
-window.addEventListener('orientationchange', checkLandscape);
-window.addEventListener('resize', checkLandscape);
 </script>
-<!-- 横屏提示遮罩 -->
-<div id="landscape-tip" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);color:#333;align-items:center;justify-content:center;text-align:center;font-size:1.3em;">
-  <div style="width:100%;">
-    <div style="font-size:2em; margin-bottom: 1em;">请横屏浏览</div>
-    <div>为获得最佳体验，请将手机旋转到横屏模式</div>
-  </div>
-</div>
 </body>
 </html> 

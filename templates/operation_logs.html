@@ -31,6 +31,23 @@
             table, th, td { font-size: 0.90rem; }
             .btn, .btn-sm { font-size: 0.90rem; padding: 0.5rem 0.3rem; }
         }
+        @media screen and (orientation: landscape) and (max-width: 900px) {
+            body, table, th, td, input, select, button {
+                font-size: 15px !important;
+            }
+            .btn {
+                padding: 0.3rem 0.7rem !important;
+                font-size: 15px !important;
+            }
+            .table th, .table td {
+                padding: 0.4rem 0.4rem !important;
+                white-space: nowrap;
+            }
+            .form-control, .form-select {
+                font-size: 15px !important;
+                padding: 0.3rem 0.7rem !important;
+            }
+        }
     </style>
     <script>
     // 解析JSON字符串为对象
@@ -107,6 +124,19 @@
         filteredLogs = logs;
         renderTable();
     }
+    function checkLandscape() {
+        var tip = document.getElementById('landscape-tip');
+        if (window.innerWidth < window.innerHeight) {
+            tip.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        } else {
+            tip.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+    window.addEventListener('load', checkLandscape);
+    window.addEventListener('orientationchange', checkLandscape);
+    window.addEventListener('resize', checkLandscape);
     </script>
 </head>
 <body>
@@ -149,5 +179,12 @@
     </div>
 </div>
 <pre id="logs-data" style="display:none">{{ logs|tojson }}</pre>
+<!-- 横屏提示遮罩 -->
+<div id="landscape-tip" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);color:#333;align-items:center;justify-content:center;text-align:center;font-size:1.3em;">
+  <div style="width:100%;">
+    <div style="font-size:2em; margin-bottom: 1em;">请横屏浏览</div>
+    <div>为获得最佳体验，请将手机旋转到横屏模式</div>
+  </div>
+</div>
 </body>
 </html> 

@@ -19,7 +19,18 @@
         .diff-table th { background: #f6f8fa; }
         .diff-changed { color: #e53935; font-weight: bold; }
         .pagination { margin-top: 1.5rem; }
-        @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } }
+        @media (max-width: 768px) {
+            .main-card { padding: 1rem; margin-top: 1rem; }
+            h1 { font-size: 1.3rem; }
+            table, th, td { font-size: 0.95rem; }
+            .btn, .btn-sm { font-size: 0.95rem; padding: 0.6rem 0.5rem; }
+        }
+        @media (max-width: 576px) {
+            .main-card { padding: 0.5rem; }
+            h1 { font-size: 1.1rem; }
+            table, th, td { font-size: 0.90rem; }
+            .btn, .btn-sm { font-size: 0.90rem; padding: 0.5rem 0.3rem; }
+        }
     </style>
     <script>
     // 解析JSON字符串为对象

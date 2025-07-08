@@ -23,7 +23,18 @@
         .table thead th { background: #e0e7ff; font-weight: bold; text-align: center; vertical-align: middle; }
         .table td, .table th { text-align: center; vertical-align: middle; }
         .table-hover tbody tr:hover { background: #f0f7ff; transition: background 0.2s; }
-        @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } }
+        @media (max-width: 768px) {
+            .main-card { padding: 1rem; margin-top: 1rem; }
+            h1 { font-size: 1.3rem; }
+            table, th, td { font-size: 0.95rem; }
+            .btn, .btn-sm { font-size: 0.95rem; padding: 0.6rem 0.5rem; }
+        }
+        @media (max-width: 576px) {
+            .main-card { padding: 0.5rem; }
+            h1 { font-size: 1.1rem; }
+            table, th, td { font-size: 0.90rem; }
+            .btn, .btn-sm { font-size: 0.90rem; padding: 0.5rem 0.3rem; }
+        }
         input::placeholder, textarea::placeholder {
             color: #888 !important;
             opacity: 1;

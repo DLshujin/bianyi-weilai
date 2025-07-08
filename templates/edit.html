@@ -55,49 +55,53 @@
     </div>
 </nav>
 <div class="container">
-    <div class="main-card">
-        <h1 class="mb-4">编辑课消记录</h1>
-        <form method="post">
-            <div class="mb-3">
-                <label for="student_id" class="form-label">学生</label>
-                <select class="form-select" id="student_id" name="student_id" required>
-                    {% for student in students %}
-                    <option value="{{ student.id }}" {% if student.id == record.student_id %}selected{% endif %}>{{ student.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="course_id" class="form-label">课程</label>
-                <select class="form-select" id="course_id" name="course_id" required>
-                    {% for course in courses %}
-                    <option value="{{ course.id }}" {% if course.id == record.course_id %}selected{% endif %}>{{ course.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="topic" class="form-label">上课主题/知识点</label>
-                <input type="text" class="form-control" id="topic" name="topic" value="{{ record.topic }}" placeholder="如：循环、数组、函数...">
-            </div>
-            <div class="mb-3">
-                <label for="hours_consumed" class="form-label">消耗课时</label>
-                <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" value="{{ record.hours_consumed }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="teacher" class="form-label">上课老师</label>
-                <input type="text" class="form-control" id="teacher" name="teacher" value="{{ record.teacher }}" placeholder="如：张老师">
-            </div>
-            <div class="mb-3">
-                <label for="date" class="form-label">日期</label>
-                <input type="date" class="form-control" id="date" name="date" value="{{ record.date }}">
-            </div>
-            <div class="mb-3">
-                <label for="note" class="form-label">备注</label>
-                <input type="text" class="form-control" id="note" name="note" value="{{ record.note }}">
-            </div>
-            <button type="submit" class="btn btn-success">保存修改</button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回</a>
-        </form>
-    </div>
+    {% if session['role'] not in ['admin', 'manager'] %}
+        <div class="alert alert-danger mt-4">无权限访问</div>
+    {% else %}
+        <div class="main-card">
+            <h1 class="mb-4">编辑课消记录</h1>
+            <form method="post">
+                <div class="mb-3">
+                    <label for="student_id" class="form-label">学生</label>
+                    <select class="form-select" id="student_id" name="student_id" required>
+                        {% for student in students %}
+                        <option value="{{ student.id }}" {% if student.id == record.student_id %}selected{% endif %}>{{ student.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="course_id" class="form-label">课程</label>
+                    <select class="form-select" id="course_id" name="course_id" required>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}" {% if course.id == record.course_id %}selected{% endif %}>{{ course.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="topic" class="form-label">上课主题/知识点</label>
+                    <input type="text" class="form-control" id="topic" name="topic" value="{{ record.topic }}" placeholder="如：循环、数组、函数...">
+                </div>
+                <div class="mb-3">
+                    <label for="hours_consumed" class="form-label">消耗课时</label>
+                    <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" value="{{ record.hours_consumed }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="teacher" class="form-label">上课老师</label>
+                    <input type="text" class="form-control" id="teacher" name="teacher" value="{{ record.teacher }}" placeholder="如：张老师">
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">日期</label>
+                    <input type="date" class="form-control" id="date" name="date" value="{{ record.date }}">
+                </div>
+                <div class="mb-3">
+                    <label for="note" class="form-label">备注</label>
+                    <input type="text" class="form-control" id="note" name="note" value="{{ record.note }}">
+                </div>
+                <button type="submit" class="btn btn-success">保存修改</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回</a>
+            </form>
+        </div>
+    {% endif %}
 </div>
 </body>
 </html> 

@@ -87,7 +87,9 @@
     <div class="main-card">
         <h1 class="mb-4">学生管理</h1>
         <div class="mb-3">
+            {% if session['role'] in ['admin', 'manager'] %}
             <a href="{{ url_for('add_student') }}" class="btn btn-primary"><i class="fa-solid fa-user-plus me-1"></i>添加学生</a>
+            {% endif %}
             <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回首页</a>
         </div>
         <div class="table-responsive">
@@ -106,9 +108,11 @@
                         <td>{{ student.name }}</td>
                         <td>{{ student.contact }}</td>
                         <td>
+                            {% if session['role'] in ['admin', 'manager'] %}
                             <form action="{{ url_for('delete_student', student_id=student.id) }}" method="post" style="display:inline-block;">
                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除该学生吗？');"><i class="fa-solid fa-trash"></i> 删除</button>
                             </form>
+                            {% endif %}
                         </td>
                     </tr>
                 {% else %}

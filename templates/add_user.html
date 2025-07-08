@@ -47,28 +47,34 @@
     </div>
 </nav>
 <div class="container">
-    <div class="main-card">
-        <h1 class="mb-4">添加账号</h1>
-        <form method="post">
-            <div class="mb-3">
-                <label for="username" class="form-label">用户名</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">密码</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <div class="mb-3">
-                <label for="role" class="form-label">角色</label>
-                <select class="form-select" id="role" name="role" required>
-                    <option value="user">普通用户</option>
-                    <option value="admin">管理员</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">提交</button>
-            <a href="{{ url_for('user_list') }}" class="btn btn-secondary ms-2">返回</a>
-        </form>
-    </div>
+    {% if session['username'] != 'admin' %}
+        <div class="alert alert-danger mt-4">无权限访问</div>
+    {% else %}
+        <div class="main-card">
+            <h1 class="mb-4">添加账号</h1>
+            <form method="post">
+                <div class="mb-3">
+                    <label for="username" class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">密码</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="role" class="form-label">角色</label>
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="user">普通用户</option>
+                        {% if session['role'] == 'admin' %}
+                        <option value="manager">管理者</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">提交</button>
+                <a href="{{ url_for('user_list') }}" class="btn btn-secondary ms-2">返回</a>
+            </form>
+        </div>
+    {% endif %}
 </div>
 <script>
 function toggleTheme() {

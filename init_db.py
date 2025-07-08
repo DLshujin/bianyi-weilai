@@ -62,6 +62,20 @@ CREATE TABLE IF NOT EXISTS user (
 )
 ''')
 
+# 创建操作日志表
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS record_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    record_id INTEGER,
+    operation_type TEXT NOT NULL, -- add/edit/delete
+    operator TEXT NOT NULL,
+    operation_time TEXT NOT NULL,
+    before_content TEXT,
+    after_content TEXT,
+    FOREIGN KEY(record_id) REFERENCES record(id)
+)
+''')
+
 # 插入默认管理员账号（如不存在）
 cursor.execute('SELECT * FROM user WHERE username = ?', ('admin',))
 if not cursor.fetchone():

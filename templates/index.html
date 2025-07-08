@@ -173,6 +173,24 @@
             .btn, .btn-sm { width: 100%; margin-bottom: 0.5rem; }
             .main-card { padding: 0.7rem; }
         }
+        @media (max-width: 576px) {
+            .table th, .table td {
+                font-size: 0.92rem;
+                padding: 0.4rem 0.2rem;
+            }
+            .btn, .btn-sm {
+                width: 100%;
+                margin-bottom: 0.5rem;
+                font-size: 1rem;
+                padding: 0.7rem 0.5rem;
+            }
+            .main-card {
+                padding: 0.3rem;
+            }
+            h1, h4 {
+                font-size: 1rem;
+            }
+        }
     </style>
     <script>
     function toggleTheme() {
@@ -239,6 +257,7 @@
             <a href="{{ url_for('add') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 添加课消记录</a>
         </div>
         <div class="table-responsive">
+        <small class="text-muted d-block d-md-none mb-1">左右滑动查看更多</small>
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>

@@ -37,6 +37,18 @@
         body.dark .form-control { background: #232a36; color: #fff; border-color: #444; }
         body.dark .form-control:focus { border-color: #ffb300; box-shadow: 0 0 0 2px #ffb30033; }
         @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } .table-responsive { margin-bottom: 1rem; } }
+        @media (max-width: 576px) {
+            .table th, .table td {
+                font-size: 0.92rem;
+                padding: 0.4rem 0.2rem;
+            }
+            .btn, .btn-sm {
+                width: 100%;
+                margin-bottom: 0.5rem;
+                font-size: 1rem;
+                padding: 0.7rem 0.5rem;
+            }
+        }
     </style>
     <script>
     function toggleTheme() {
@@ -71,30 +83,31 @@
             <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回首页</a>
         </div>
         <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>联系方式</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for student in students %}
-                <tr>
-                    <td>{{ student.name }}</td>
-                    <td>{{ student.contact }}</td>
-                    <td>
-                        <form action="{{ url_for('delete_student', student_id=student.id) }}" method="post" style="display:inline-block;">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除该学生吗？');"><i class="fa-solid fa-trash"></i> 删除</button>
-                        </form>
-                    </td>
-                </tr>
-            {% else %}
-                <tr><td colspan="3" class="text-center">暂无学生</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
+            <small class="text-muted d-block d-md-none mb-1">左右滑动查看更多</small>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>联系方式</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for student in students %}
+                    <tr>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.contact }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_student', student_id=student.id) }}" method="post" style="display:inline-block;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除该学生吗？');"><i class="fa-solid fa-trash"></i> 删除</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3" class="text-center">暂无学生</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

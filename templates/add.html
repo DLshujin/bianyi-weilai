@@ -30,6 +30,18 @@
         body.dark .form-control { background: #232a36; color: #fff; border-color: #444; }
         body.dark .form-control:focus { border-color: #ffb300; box-shadow: 0 0 0 2px #ffb30033; }
         @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } }
+        @media (max-width: 576px) {
+            .btn, .btn-sm {
+                width: 100%;
+                margin-bottom: 0.5rem;
+                font-size: 1rem;
+                padding: 0.7rem 0.5rem;
+            }
+            .form-control {
+                font-size: 1rem;
+                padding: 0.7rem 0.5rem;
+            }
+        }
     </style>
     <script>
     function toggleTheme() {

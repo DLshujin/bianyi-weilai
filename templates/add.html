@@ -42,6 +42,14 @@
                 padding: 0.7rem 0.5rem;
             }
         }
+        input::placeholder, textarea::placeholder {
+            color: #888 !important;
+            opacity: 1;
+            transition: filter 0.2s;
+        }
+        body.dark input::placeholder, body.dark textarea::placeholder {
+            filter: invert(1);
+        }
     </style>
     <script>
     function toggleTheme() {

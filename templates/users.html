@@ -24,6 +24,14 @@
         .table td, .table th { text-align: center; vertical-align: middle; }
         .table-hover tbody tr:hover { background: #f0f7ff; transition: background 0.2s; }
         @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } }
+        input::placeholder, textarea::placeholder {
+            color: #888 !important;
+            opacity: 1;
+            transition: filter 0.2s;
+        }
+        body.dark input::placeholder, body.dark textarea::placeholder {
+            filter: invert(1);
+        }
     </style>
 </head>
 <body>

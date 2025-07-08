@@ -32,6 +32,14 @@
         body.dark .form-control { background: #232a36; color: #fff; border-color: #444; }
         body.dark .form-control:focus { border-color: #ffb300; box-shadow: 0 0 0 2px #ffb30033; }
         @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } }
+        input::placeholder, textarea::placeholder {
+            color: #888 !important;
+            opacity: 1;
+            transition: filter 0.2s;
+        }
+        body.dark input::placeholder, body.dark textarea::placeholder {
+            filter: invert(1);
+        }
     </style>
     <script>
     function toggleTheme() {

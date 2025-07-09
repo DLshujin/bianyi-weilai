@@ -234,6 +234,9 @@
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('user_list') }}">用户管理</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('operation_logs') }}">操作日志</a></li>
                 {% endif %}
+                {% if session['role'] in ['admin', 'manager'] %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('schedule_list') }}">排课管理</a></li>
+                {% endif %}
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">退出</a></li>
             </ul>
         </div>
@@ -271,6 +274,9 @@
         </div>
         <div class="mb-3">
             <a href="{{ url_for('add') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 添加课消记录</a>
+            {% if session['role'] in ['admin', 'manager'] %}
+            <a href="{{ url_for('schedule_list') }}" class="btn btn-primary mb-3 me-2"><i class="fa-solid fa-calendar-check me-1"></i>排课管理</a>
+            {% endif %}
         </div>
         <div class="table-responsive">
         <small class="text-muted d-block d-md-none mb-1">左右滑动查看更多</small>

@@ -76,6 +76,22 @@ CREATE TABLE IF NOT EXISTS record_log (
 )
 ''')
 
+# 创建排课表，支持一次为多个学生排同一节课，student_ids为逗号分隔字符串
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS schedule (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id INTEGER NOT NULL,
+    student_ids TEXT NOT NULL, -- 逗号分隔的学生ID
+    teacher TEXT,
+    date TEXT NOT NULL,
+    time TEXT,
+    note TEXT,
+    status TEXT NOT NULL DEFAULT '未消课',
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY(course_id) REFERENCES course(id)
+)
+''')
+
 # 插入默认管理员账号（如不存在）
 cursor.execute('SELECT * FROM user WHERE username = ?', ('admin',))
 if not cursor.fetchone():

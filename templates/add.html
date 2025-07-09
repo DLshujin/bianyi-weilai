@@ -93,12 +93,13 @@
             <form method="post">
                 <div class="mb-3">
                     <label for="student_id" class="form-label">学生</label>
-                    <select class="form-select" id="student_id" name="student_id" required>
-                        <option value="">请选择学生</option>
+                    <select class="form-select" id="student_id" name="student_id" multiple required>
+                        <option value="" disabled>请选择学生（可多选）</option>
                         {% for student in students %}
                         <option value="{{ student.id }}">{{ student.name }}</option>
                         {% endfor %}
                     </select>
+                    <small class="form-text text-muted">按住Ctrl或Shift可多选</small>
                 </div>
                 <div class="mb-3">
                     <label for="course_id" class="form-label">课程</label>

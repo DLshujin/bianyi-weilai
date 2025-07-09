@@ -7,6 +7,7 @@ import io
 from functools import wraps
 import os
 import json
+from pypinyin import lazy_pinyin, Style
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -74,52 +75,97 @@ def logout():
     return redirect(url_for('login'))
 
 # --- 需要登录的页面 ---
-@app.route('/')
+@app.route('/', methods=['GET'])
 @login_required
 def index():
     conn = get_db_connection()
-    if session.get('role') in ['admin', 'manager']:
-        records = conn.execute('''
-            SELECT record.id, student.name AS student_name, course.name AS course_name, record.hours_consumed, record.date, record.note, record.topic, record.operator
-            FROM record
-            JOIN student ON record.student_id = student.id
-            JOIN course ON record.course_id = course.id
-            ORDER BY record.date DESC
-        ''').fetchall()
-        balances = conn.execute('''
-            SELECT s.name AS student_name, c.name AS course_name, sc.total_hours,
-                   IFNULL(SUM(r.hours_consumed), 0) AS consumed_hours,
-                   sc.total_hours - IFNULL(SUM(r.hours_consumed), 0) AS remaining_hours
-            FROM student_course sc
-            JOIN student s ON sc.student_id = s.id
-            JOIN course c ON sc.course_id = c.id
-            LEFT JOIN record r ON sc.student_id = r.student_id AND sc.course_id = r.course_id
-            GROUP BY sc.id
-            ORDER BY s.name, c.name
-        ''').fetchall()
-    else:
-        records = conn.execute('''
-            SELECT record.id, student.name AS student_name, course.name AS course_name, record.hours_consumed, record.date, record.note, record.topic, record.operator
-            FROM record
-            JOIN student ON record.student_id = student.id
-            JOIN course ON record.course_id = course.id
-            WHERE student.name = ?
-            ORDER BY record.date DESC
-        ''', (session.get('username'),)).fetchall()
-        balances = conn.execute('''
-            SELECT s.name AS student_name, c.name AS course_name, sc.total_hours,
-                   IFNULL(SUM(r.hours_consumed), 0) AS consumed_hours,
-                   sc.total_hours - IFNULL(SUM(r.hours_consumed), 0) AS remaining_hours
-            FROM student_course sc
-            JOIN student s ON sc.student_id = s.id
-            JOIN course c ON sc.course_id = c.id
-            LEFT JOIN record r ON sc.student_id = r.student_id AND sc.course_id = r.course_id
-            WHERE s.name = ?
-            GROUP BY sc.id
-            ORDER BY s.name, c.name
-        ''', (session.get('username'),)).fetchall()
+    search_name = request.args.get('search_name', '').strip().lower()
+    course_filter = request.args.get('course_filter', '').strip()
+    export = request.args.get('export', '')
+    # 获取所有学生
+    students = conn.execute('SELECT * FROM student').fetchall()
+    # 获取所有课程
+    courses = {c['id']: c for c in conn.execute('SELECT * FROM course').fetchall()}
+    course_list = list(courses.values())
+    # 获取所有学生-课程关联
+    sc_rows = conn.execute('SELECT * FROM student_course').fetchall()
+    # 获取所有消课记录
+    records = conn.execute('''
+        SELECT r.*, s.name as student_name, c.name as course_name
+        FROM record r
+        JOIN student s ON r.student_id = s.id
+        JOIN course c ON r.course_id = c.id
+        ORDER BY r.date DESC
+    ''').fetchall()
+    # 聚合每个学生的课程信息
+    student_info = {}
+    role = session.get('role')
+    username = session.get('username')
+    for s in students:
+        name = s['name'].lower().replace(' ', '')
+        pinyin_full = ''.join(lazy_pinyin(s['name'], style=Style.NORMAL)).lower()
+        pinyin_abbr = ''.join([p[0] for p in lazy_pinyin(s['name'], style=Style.NORMAL)]).lower()
+        # 权限过滤：普通用户只能看自己
+        if role not in ['admin', 'manager']:
+            if s['name'] != username:
+                continue
+        # 仅有搜索条件时才过滤
+        if search_name:
+            if (search_name not in name and
+                search_name not in pinyin_full and
+                search_name not in pinyin_abbr):
+                continue
+        s_courses = []
+        for sc in sc_rows:
+            if sc['student_id'] == s['id']:
+                course = courses.get(sc['course_id'])
+                if not course:
+                    continue
+                # 课程筛选
+                if course_filter and str(course['id']) != course_filter:
+                    continue
+                # 统计已上课时
+                consumed = sum(r['hours_consumed'] for r in records if r['student_id']==s['id'] and r['course_id']==sc['course_id'])
+                s_courses.append({
+                    'course_name': course['name'],
+                    'total_hours': sc['total_hours'],
+                    'price': sc['price'],
+                    'consumed_hours': consumed,
+                    'remaining_hours': sc['total_hours'] - consumed
+                })
+        # 该学生所有消课记录
+        s_records = [r for r in records if r['student_id']==s['id'] and (not course_filter or str(r['course_id'])==course_filter)]
+        # 只显示有课程或有消课记录的学生
+        if not s_courses and not s_records:
+            continue
+        student_info[s['id']] = {
+            'student': s,
+            'courses': s_courses,
+            'records': s_records
+        }
+    # 导出Excel
+    if export == '1':
+        import pandas as pd
+        from io import BytesIO
+        rows = []
+        for sid, info in student_info.items():
+            for c in info['courses']:
+                rows.append({
+                    '学生': info['student']['name'],
+                    '联系方式': info['student']['contact'],
+                    '课程': c['course_name'],
+                    '总课时': c['total_hours'],
+                    '单价': c['price'],
+                    '已上课时': c['consumed_hours'],
+                    '剩余课时': c['remaining_hours']
+                })
+        df = pd.DataFrame(rows)
+        output = BytesIO()
+        df.to_excel(output, index=False)
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name='学生课程信息.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     conn.close()
-    return render_template('index.html', records=records, balances=balances)
+    return render_template('index.html', student_info=student_info, search_name=search_name, course_list=course_list, course_filter=course_filter)
 
 @app.route('/add', methods=['GET', 'POST'])
 @admin_or_manager_required
@@ -222,14 +268,18 @@ def add_student():
     if request.method == 'POST':
         name = request.form['name']
         contact = request.form['contact']
-        course_names = request.form.getlist('course_name')
+        course_selects = request.form.getlist('course_name_select')
+        custom_courses = request.form.getlist('custom_course_name')
         total_hours_list = request.form.getlist('total_hours')
         price_list = request.form.getlist('price')
         cursor.execute('INSERT INTO student (name, contact) VALUES (?, ?)', (name, contact))
         student_id = cursor.lastrowid
-        for idx, course_name in enumerate(course_names):
+        for idx, course_sel in enumerate(course_selects):
+            if course_sel == 'other':
+                course_name = custom_courses[idx].strip()
+            else:
+                course_name = course_sel
             if course_name and total_hours_list[idx] and price_list[idx]:
-                # 检查课程是否已存在
                 cursor.execute('SELECT id FROM course WHERE name = ?', (course_name,))
                 course_row = cursor.fetchone()
                 if course_row:
@@ -252,6 +302,26 @@ def delete_student(student_id):
     conn.commit()
     conn.close()
     return redirect(url_for('students'))
+
+@app.route('/students/edit/<int:student_id>', methods=['GET', 'POST'])
+@admin_or_manager_required
+def edit_student(student_id):
+    conn = get_db_connection()
+    student = conn.execute('SELECT * FROM student WHERE id = ?', (student_id,)).fetchone()
+    if not student:
+        conn.close()
+        flash('学生不存在！')
+        return redirect(url_for('students'))
+    if request.method == 'POST':
+        name = request.form['name']
+        contact = request.form['contact']
+        conn.execute('UPDATE student SET name=?, contact=? WHERE id=?', (name, contact, student_id))
+        conn.commit()
+        conn.close()
+        flash('学生信息已更新！')
+        return redirect(url_for('students'))
+    conn.close()
+    return render_template('edit_student.html', student=student)
 
 # 删除课程管理相关路由
 
@@ -402,7 +472,7 @@ def operation_logs():
 @admin_or_manager_required
 def schedule_list():
     conn = get_db_connection()
-    schedules = conn.execute('SELECT * FROM schedule ORDER BY date DESC, time DESC').fetchall()
+    schedules = conn.execute('SELECT * FROM schedule ORDER BY start_date DESC, time DESC').fetchall()
     courses = {c['id']: c['name'] for c in conn.execute('SELECT * FROM course').fetchall()}
     students = {s['id']: s['name'] for s in conn.execute('SELECT * FROM student').fetchall()}
     conn.close()
@@ -415,25 +485,46 @@ def add_schedule():
     courses = conn.execute('SELECT * FROM course').fetchall()
     students = conn.execute('SELECT * FROM student').fetchall()
     if request.method == 'POST':
-        course_id = request.form['course_id']
+        course_val = request.form['course_id']
+        if course_val == 'other':
+            custom_course = request.form.get('custom_course', '').strip()
+            if not custom_course:
+                flash('请选择或填写课程名称！')
+                conn.close()
+                return redirect(request.url)
+            # 自动创建新课程
+            cur = conn.cursor()
+            cur.execute('INSERT INTO course (name, total_hours) VALUES (?, ?)', (custom_course, 0))
+            course_id = cur.lastrowid
+        else:
+            # 固定课程名，查找或创建
+            cur = conn.cursor()
+            cur.execute('SELECT id FROM course WHERE name=?', (course_val,))
+            row = cur.fetchone()
+            if row:
+                course_id = row[0]
+            else:
+                cur.execute('INSERT INTO course (name, total_hours) VALUES (?, ?)', (course_val, 0))
+                course_id = cur.lastrowid
         student_ids = request.form.getlist('student_ids')
         teacher = request.form.get('teacher')
-        date = request.form['date']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
         time = request.form['time']
         note = request.form['note']
-        # 冲突检测（简单实现：同一学生同一天同一时间有排课则冲突）
+        # 冲突检测（同一学生同一天同一时间有排课则冲突）
         for sid in student_ids:
-            conflict = conn.execute('SELECT * FROM schedule WHERE date=? AND time=? AND instr(student_ids, ?) > 0', (date, time, sid)).fetchone()
+            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_date<=? AND end_date>=?) OR (start_date<=? AND end_date>=?)) AND time=? AND instr(student_ids, ?) > 0', (end_date, end_date, start_date, start_date, time, sid)).fetchone()
             if conflict:
-                flash(f'学生ID {sid} 在该时间已排课，请检查！')
+                flash(f'学生ID {sid} 在该时间段已排课，请检查！')
                 conn.close()
                 return redirect(request.url)
         student_ids_str = ','.join(student_ids)
-        conn.execute('INSERT INTO schedule (course_id, student_ids, teacher, date, time, note) VALUES (?, ?, ?, ?, ?, ?)',
-                     (course_id, student_ids_str, teacher, date, time, note))
+        conn.execute('INSERT INTO schedule (course_id, student_ids, teacher, start_date, end_date, time, note) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                     (course_id, student_ids_str, teacher, start_date, end_date, time, note))
         conn.commit()
         # add_schedule 日志
-        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'add_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'date': date, 'time': time, 'note': note})))
+        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'add_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_date': start_date, 'end_date': end_date, 'time': time, 'note': note})))
         conn.close()
         return redirect(url_for('schedule_list'))
     conn.close()
@@ -455,22 +546,23 @@ def edit_schedule(schedule_id):
         course_id = request.form['course_id']
         student_ids = request.form.getlist('student_ids')
         teacher = request.form.get('teacher')
-        date = request.form['date']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
         time = request.form['time']
         note = request.form['note']
         # 冲突检测
         for sid in student_ids:
-            conflict = conn.execute('SELECT * FROM schedule WHERE date=? AND time=? AND instr(student_ids, ?) > 0 AND id!=?', (date, time, sid, schedule_id)).fetchone()
+            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_date<=? AND end_date>=?) OR (start_date<=? AND end_date>=?)) AND time=? AND instr(student_ids, ?) > 0 AND id!=?', (end_date, end_date, start_date, start_date, time, sid, schedule_id)).fetchone()
             if conflict:
-                flash(f'学生ID {sid} 在该时间已排课，请检查！')
+                flash(f'学生ID {sid} 在该时间段已排课，请检查！')
                 conn.close()
                 return redirect(request.url)
         student_ids_str = ','.join(student_ids)
-        conn.execute('UPDATE schedule SET course_id=?, student_ids=?, teacher=?, date=?, time=?, note=? WHERE id=?',
-                     (course_id, student_ids_str, teacher, date, time, note, schedule_id))
+        conn.execute('UPDATE schedule SET course_id=?, student_ids=?, teacher=?, start_date=?, end_date=?, time=?, note=? WHERE id=?',
+                     (course_id, student_ids_str, teacher, start_date, end_date, time, note, schedule_id))
         conn.commit()
         # edit_schedule 日志
-        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'edit_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), json.dumps(dict(schedule)), json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'date': date, 'time': time, 'note': note})))
+        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'edit_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), json.dumps(dict(schedule)), json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_date': start_date, 'end_date': end_date, 'time': time, 'note': note})))
         conn.close()
         return redirect(url_for('schedule_list'))
     conn.close()
@@ -512,8 +604,8 @@ def consume_schedule(schedule_id):
     note = request.form['note']
     hours_consumed = int(request.form['hours_consumed'])
     operator = session.get('username')
-    date = schedule['date']
-    time = schedule['time']
+    start_date = schedule['start_date']
+    end_date = schedule['end_date']
     course_id = schedule['course_id']
     teacher = schedule['teacher']
     student_ids = schedule['student_ids'].split(',')
@@ -521,13 +613,13 @@ def consume_schedule(schedule_id):
     for student_id in student_ids:
         cursor.execute(
             'INSERT INTO record (student_id, course_id, hours_consumed, date, note, topic, teacher, operator) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            (student_id, course_id, hours_consumed, date, note, topic, teacher, operator)
+            (student_id, course_id, hours_consumed, start_date, note, topic, teacher, operator)
         )
         record_id = cursor.lastrowid
         cursor.execute(
             'INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)',
             (record_id, 'add', operator, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({
-                'student_id': student_id, 'course_id': course_id, 'hours_consumed': hours_consumed, 'date': date, 'note': note, 'topic': topic, 'teacher': teacher, 'operator': operator
+                'student_id': student_id, 'course_id': course_id, 'hours_consumed': hours_consumed, 'date': start_date, 'note': note, 'topic': topic, 'teacher': teacher, 'operator': operator
             }))
         )
     conn.commit()
@@ -577,6 +669,50 @@ def report():
                 stat['consumed'] += 1
     conn.close()
     return render_template('report.html', total_schedules=total_schedules, total_consumed=total_consumed, consume_rate=consume_rate, course_stats=course_stats, teacher_stats=teacher_stats, student_stats=student_stats)
+
+# 课程管理相关路由
+@app.route('/courses')
+@admin_or_manager_required
+def course_list():
+    conn = get_db_connection()
+    courses = conn.execute('SELECT * FROM course').fetchall()
+    conn.close()
+    return render_template('courses.html', courses=courses)
+
+@app.route('/courses/add', methods=['GET', 'POST'])
+@admin_or_manager_required
+def add_course():
+    if request.method == 'POST':
+        name_sel = request.form['name_select']
+        if name_sel == 'other':
+            name = request.form.get('custom_name', '').strip()
+        else:
+            name = name_sel
+        total_hours = request.form['total_hours']
+        price = request.form['price']
+        conn = get_db_connection()
+        # 检查是否重名
+        exists = conn.execute('SELECT 1 FROM course WHERE name=?', (name,)).fetchone()
+        if exists:
+            conn.close()
+            flash('课程已存在！')
+            return redirect(url_for('course_list'))
+        conn.execute('INSERT INTO course (name, total_hours, price) VALUES (?, ?, ?)', (name, total_hours, price))
+        conn.commit()
+        conn.close()
+        flash('课程添加成功！')
+        return redirect(url_for('course_list'))
+    return render_template('add_course.html')
+
+@app.route('/courses/delete/<int:course_id>', methods=['POST'])
+@admin_or_manager_required
+def delete_course(course_id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM course WHERE id=?', (course_id,))
+    conn.commit()
+    conn.close()
+    flash('课程已删除！')
+    return redirect(url_for('course_list'))
 
 if __name__ == '__main__':
     import os

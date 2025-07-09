@@ -79,7 +79,26 @@
                         <th>字段变更</th>
                     </tr>
                 </thead>
-                <tbody id="log-tbody">
+                <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.record_id }}</td>
+                        <td>{{ log.operation_type }}</td>
+                        <td>{{ log.operator }}</td>
+                        <td>{{ log.operation_time }}</td>
+                        <td>
+                            <details>
+                                <summary>详情</summary>
+                                <div><b>前：</b>{{ log.before_content }}</div>
+                                <div><b>后：</b>{{ log.after_content }}</div>
+                            </details>
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% if logs|length == 0 %}
+                <tr><td colspan="6" class="text-center text-muted">暂无日志</td></tr>
+                {% endif %}
                 </tbody>
             </table>
         </div>
@@ -89,6 +108,5 @@
         <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">返回首页</a>
     </div>
 </div>
-<pre id="logs-data" style="display:none">{{ logs|tojson }}</pre>
 </body>
 </html> 

@@ -103,7 +103,14 @@ window.addCourseRow = function() {
     row.className = 'row g-2 mb-2 align-items-center';
     row.innerHTML = `
         <div class="col-5">
-            <input type="text" class="form-control" name="course_name" placeholder="课程名称" required>
+            <select class="form-select course-select" name="course_name_select" required onchange="toggleCustomCourse(this)">
+                <option value="">请选择课程</option>
+                <option value="C++">C++</option>
+                <option value="GOC">GOC</option>
+                <option value="图形化">图形化</option>
+                <option value="other">其他</option>
+            </select>
+            <input type="text" class="form-control mt-2 custom-course-input" name="custom_course_name" placeholder="请输入课程名称" style="display:none;">
         </div>
         <div class="col-3">
             <input type="number" class="form-control" name="total_hours" placeholder="课时" min="1" required>
@@ -116,6 +123,17 @@ window.addCourseRow = function() {
         </div>
     `;
     container.appendChild(row);
+}
+function toggleCustomCourse(select) {
+    const input = select.parentElement.querySelector('.custom-course-input');
+    if (select.value === 'other') {
+        input.style.display = '';
+        input.required = true;
+    } else {
+        input.style.display = 'none';
+        input.value = '';
+        input.required = false;
+    }
 }
 window.onload = function() {
     if (document.getElementById('courses-container').children.length === 0) {

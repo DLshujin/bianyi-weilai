@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>排课管理 - 课消平台</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h1>排课管理</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mb-3 me-2">返回主页</a>
+    <a href="{{ url_for('add_schedule') }}" class="btn btn-primary mb-3">添加排课</a>
+    <table class="table table-bordered table-hover table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>课程</th>
+                <th>学生</th>
+                <th>老师</th>
+                <th>开始日期时间</th>
+                <th>结束日期时间</th>
+                <th>时间</th>
+                <th>备注</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for s in schedules %}
+            <tr>
+                <td>{{ s.id }}</td>
+                <td>{{ courses[s.course_id] }}</td>
+                <td>
+                  {% for sid in s.student_ids.split(',') %}
+                    {{ students[sid|int] }}<br>
+                  {% endfor %}
+                </td>
+                <td>{{ s.teacher }}</td>
+                <td>{{ s.start_date }}</td>
+                <td>{{ s.end_date }}</td>
+                <td>{{ s.time }}</td>
+                <td>{{ s.note }}</td>
+                <td>{{ s.status if s.status else '未消课' }}</td>
+                <td>
+                    <a href="{{ url_for('edit_schedule', schedule_id=s.id) }}" class="btn btn-sm btn-warning me-1">编辑</a>
+                    <form action="{{ url_for('delete_schedule', schedule_id=s.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger me-1" onclick="return confirm('确定删除？')">删除</button>
+                    </form>
+                    {% if s.status != '已消课' %}
+                    <a href="#" class="btn btn-sm btn-success" onclick="openConsumeModal({{ s.id }})">点名消课</a>
+                    {% else %}
+                    <button class="btn btn-sm btn-secondary" disabled>已消课</button>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        {% if schedules|length == 0 %}
+        <tr><td colspan="9" class="text-center text-muted">暂无排课记录</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+<!-- 点名消课弹窗 -->
+<div class="modal fade" id="consumeModal" tabindex="-1" aria-labelledby="consumeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="consumeForm" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title" id="consumeModalLabel">点名消课</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="topic" class="form-label">课程主题/知识点</label>
+            <input type="text" class="form-control" id="topic" name="topic" required>
+          </div>
+          <div class="mb-3">
+            <label for="note" class="form-label">备注</label>
+            <input type="text" class="form-control" id="note" name="note">
+          </div>
+          <div class="mb-3">
+            <label for="hours_consumed" class="form-label">消耗课时</label>
+            <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" value="1" required>
+          </div>
+          <div class="alert alert-warning" id="consumeConfirm" style="display:none;">请确认要为该排课的所有学生消课，操作不可撤销！</div>
+        </div>
+        <div class="modal-footer">
+          <a href="{{ url_for('index') }}" class="btn btn-outline-primary">返回主页</a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-success" onclick="return confirmConsume()">确认消课</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let currentScheduleId = null;
+function openConsumeModal(scheduleId) {
+  currentScheduleId = scheduleId;
+  document.getElementById('consumeForm').action = '/schedules/consume/' + scheduleId;
+  document.getElementById('topic').value = '';
+  document.getElementById('note').value = '';
+  document.getElementById('hours_consumed').value = '1';
+  document.getElementById('consumeConfirm').style.display = 'none';
+  var modal = new bootstrap.Modal(document.getElementById('consumeModal'));
+  modal.show();
+  setTimeout(()=>{document.getElementById('topic').focus();}, 300);
+}
+document.getElementById('consumeModal').addEventListener('hidden.bs.modal', function () {
+  document.getElementById('consumeForm').reset();
+  document.getElementById('consumeConfirm').style.display = 'none';
+});
+function confirmConsume() {
+  document.getElementById('consumeConfirm').style.display = 'block';
+  return confirm('确定要为该排课的所有学生消课吗？此操作不可撤销！');
+}
+</script>
+</body>
+</html> 

@@ -97,8 +97,7 @@
     </div>
 </div>
 <script>
-let courseIndex = 0;
-function addCourseRow() {
+window.addCourseRow = function() {
     const container = document.getElementById('courses-container');
     const row = document.createElement('div');
     row.className = 'row g-2 mb-2 align-items-center';
@@ -118,7 +117,6 @@ function addCourseRow() {
     `;
     container.appendChild(row);
 }
-// 页面加载时自动添加一行
 window.onload = function() {
     if (document.getElementById('courses-container').children.length === 0) {
         addCourseRow();

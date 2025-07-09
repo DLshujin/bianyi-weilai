@@ -96,5 +96,34 @@
         </form>
     </div>
 </div>
+<script>
+let courseIndex = 0;
+function addCourseRow() {
+    const container = document.getElementById('courses-container');
+    const row = document.createElement('div');
+    row.className = 'row g-2 mb-2 align-items-center';
+    row.innerHTML = `
+        <div class="col-5">
+            <input type="text" class="form-control" name="course_name" placeholder="课程名称" required>
+        </div>
+        <div class="col-3">
+            <input type="number" class="form-control" name="total_hours" placeholder="课时" min="1" required>
+        </div>
+        <div class="col-3">
+            <input type="number" class="form-control" name="price" placeholder="价格" min="0" step="0.01" required>
+        </div>
+        <div class="col-1 text-end">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()"><i class="fa fa-trash"></i></button>
+        </div>
+    `;
+    container.appendChild(row);
+}
+// 页面加载时自动添加一行
+window.onload = function() {
+    if (document.getElementById('courses-container').children.length === 0) {
+        addCourseRow();
+    }
+}
+</script>
 </body>
 </html> 

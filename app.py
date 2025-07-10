@@ -96,7 +96,7 @@ def index():
         JOIN student s ON r.student_id = s.id
         JOIN course c ON r.course_id = c.id
         ORDER BY r.date DESC
-    ''').fetchall()
+        ''').fetchall()
     # 聚合每个学生的课程信息
     student_info = {}
     role = session.get('role')
@@ -472,7 +472,7 @@ def operation_logs():
 @admin_or_manager_required
 def schedule_list():
     conn = get_db_connection()
-    schedules = conn.execute('SELECT * FROM schedule ORDER BY start_date DESC, time DESC').fetchall()
+    schedules = conn.execute('SELECT * FROM schedule ORDER BY start_datetime DESC').fetchall()
     courses = {c['id']: c['name'] for c in conn.execute('SELECT * FROM course').fetchall()}
     students = {s['id']: s['name'] for s in conn.execute('SELECT * FROM student').fetchall()}
     conn.close()
@@ -508,23 +508,22 @@ def add_schedule():
                 course_id = cur.lastrowid
         student_ids = request.form.getlist('student_ids')
         teacher = request.form.get('teacher')
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-        time = request.form['time']
+        start_datetime = request.form['start_datetime']
+        end_datetime = request.form['end_datetime']
         note = request.form['note']
-        # 冲突检测（同一学生同一天同一时间有排课则冲突）
+        # 冲突检测（同一学生同一时间段有排课则冲突）
         for sid in student_ids:
-            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_date<=? AND end_date>=?) OR (start_date<=? AND end_date>=?)) AND time=? AND instr(student_ids, ?) > 0', (end_date, end_date, start_date, start_date, time, sid)).fetchone()
+            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_datetime<=? AND end_datetime>=?) OR (start_datetime<=? AND end_datetime>=?)) AND instr(student_ids, ?) > 0', (end_datetime, end_datetime, start_datetime, start_datetime, sid)).fetchone()
             if conflict:
                 flash(f'学生ID {sid} 在该时间段已排课，请检查！')
                 conn.close()
                 return redirect(request.url)
         student_ids_str = ','.join(student_ids)
-        conn.execute('INSERT INTO schedule (course_id, student_ids, teacher, start_date, end_date, time, note) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                     (course_id, student_ids_str, teacher, start_date, end_date, time, note))
+        conn.execute('INSERT INTO schedule (course_id, student_ids, teacher, start_datetime, end_datetime, note) VALUES (?, ?, ?, ?, ?, ?)',
+                     (course_id, student_ids_str, teacher, start_datetime, end_datetime, note))
         conn.commit()
         # add_schedule 日志
-        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'add_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_date': start_date, 'end_date': end_date, 'time': time, 'note': note})))
+        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'add_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_datetime': start_datetime, 'end_datetime': end_datetime, 'note': note})))
         conn.close()
         return redirect(url_for('schedule_list'))
     conn.close()
@@ -546,23 +545,22 @@ def edit_schedule(schedule_id):
         course_id = request.form['course_id']
         student_ids = request.form.getlist('student_ids')
         teacher = request.form.get('teacher')
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-        time = request.form['time']
+        start_datetime = request.form['start_datetime']
+        end_datetime = request.form['end_datetime']
         note = request.form['note']
         # 冲突检测
         for sid in student_ids:
-            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_date<=? AND end_date>=?) OR (start_date<=? AND end_date>=?)) AND time=? AND instr(student_ids, ?) > 0 AND id!=?', (end_date, end_date, start_date, start_date, time, sid, schedule_id)).fetchone()
+            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_datetime<=? AND end_datetime>=?) OR (start_datetime<=? AND end_datetime>=?)) AND instr(student_ids, ?) > 0 AND id!=?', (end_datetime, end_datetime, start_datetime, start_datetime, sid, schedule_id)).fetchone()
             if conflict:
                 flash(f'学生ID {sid} 在该时间段已排课，请检查！')
                 conn.close()
                 return redirect(request.url)
         student_ids_str = ','.join(student_ids)
-        conn.execute('UPDATE schedule SET course_id=?, student_ids=?, teacher=?, start_date=?, end_date=?, time=?, note=? WHERE id=?',
-                     (course_id, student_ids_str, teacher, start_date, end_date, time, note, schedule_id))
+        conn.execute('UPDATE schedule SET course_id=?, student_ids=?, teacher=?, start_datetime=?, end_datetime=?, note=? WHERE id=?',
+                     (course_id, student_ids_str, teacher, start_datetime, end_datetime, note, schedule_id))
         conn.commit()
         # edit_schedule 日志
-        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'edit_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), json.dumps(dict(schedule)), json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_date': start_date, 'end_date': end_date, 'time': time, 'note': note})))
+        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'edit_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), json.dumps(dict(schedule)), json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_datetime': start_datetime, 'end_datetime': end_datetime, 'note': note})))
         conn.close()
         return redirect(url_for('schedule_list'))
     conn.close()
@@ -604,8 +602,8 @@ def consume_schedule(schedule_id):
     note = request.form['note']
     hours_consumed = int(request.form['hours_consumed'])
     operator = session.get('username')
-    start_date = schedule['start_date']
-    end_date = schedule['end_date']
+    start_datetime = schedule['start_datetime']
+    end_datetime = schedule['end_datetime']
     course_id = schedule['course_id']
     teacher = schedule['teacher']
     student_ids = schedule['student_ids'].split(',')
@@ -613,13 +611,13 @@ def consume_schedule(schedule_id):
     for student_id in student_ids:
         cursor.execute(
             'INSERT INTO record (student_id, course_id, hours_consumed, date, note, topic, teacher, operator) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            (student_id, course_id, hours_consumed, start_date, note, topic, teacher, operator)
+            (student_id, course_id, hours_consumed, start_datetime, note, topic, teacher, operator)
         )
         record_id = cursor.lastrowid
         cursor.execute(
             'INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)',
             (record_id, 'add', operator, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({
-                'student_id': student_id, 'course_id': course_id, 'hours_consumed': hours_consumed, 'date': start_date, 'note': note, 'topic': topic, 'teacher': teacher, 'operator': operator
+                'student_id': student_id, 'course_id': course_id, 'hours_consumed': hours_consumed, 'date': start_datetime, 'note': note, 'topic': topic, 'teacher': teacher, 'operator': operator
             }))
         )
     conn.commit()

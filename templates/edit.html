@@ -4,112 +4,66 @@
     <meta charset="UTF-8">
     <title>编辑课消记录 - 课消平台</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background: #f6f8fa; font-family: 'PingFang SC', 'Microsoft YaHei', 'Roboto', Arial, sans-serif; transition: background 0.3s; }
-        .navbar { background: linear-gradient(90deg, #2563eb 60%, #ffb300 100%); }
-        .navbar-brand, .nav-link { color: #fff !important; font-weight: bold; }
-        .main-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 2rem; margin-top: 2rem; max-width: 600px; transition: box-shadow 0.2s; }
-        .main-card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.10); }
-        h1 { color: #2563eb; font-weight: bold; text-align: left; }
-        .btn, .form-control { transition: all 0.2s cubic-bezier(.4,0,.2,1); }
-        .btn-primary { background: #2563eb; border-color: #2563eb; }
-        .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; transform: translateY(-2px) scale(1.04); box-shadow: 0 4px 16px rgba(37,99,235,0.12); }
-        .btn-secondary { background: #64748b; border-color: #64748b; }
-        .btn-secondary:hover { background: #475569; border-color: #475569; }
-        .btn-success { background: #43a047; border-color: #43a047; }
-        .btn-success:hover { background: #2e7031; border-color: #2e7031; }
-        .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb33; }
-        @media (max-width: 768px) { .main-card { padding: 1rem; margin-top: 1rem; } h1 { font-size: 1.3rem; } }
-        input::placeholder, textarea::placeholder {
-            color: #888 !important;
-            opacity: 1;
-            transition: filter 0.2s;
-        }
-        body.dark input::placeholder, body.dark textarea::placeholder {
-            filter: invert(1);
-        }
-        @media screen and (orientation: landscape) and (max-width: 900px) {
-            body, table, th, td, input, select, button {
-                font-size: 15px !important;
-            }
-            .btn {
-                padding: 0.3rem 0.7rem !important;
-                font-size: 15px !important;
-            }
-            .table th, .table td {
-                padding: 0.4rem 0.4rem !important;
-                white-space: nowrap;
-            }
-            .form-control, .form-select {
-                font-size: 15px !important;
-                padding: 0.3rem 0.7rem !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+    <!-- 移除或注释原有<style>内容，确保卡片为白底黑字 -->
 </head>
-<body>
-<nav class="navbar navbar-expand-lg mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('index') }}"><i class="fa-solid fa-graduation-cap me-2"></i>课消平台</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('students') }}">学生管理</a></li>
-                <li class="nav-item"><button class="btn btn-sm btn-outline-light ms-3" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i> 主题切换</button></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">退出</a></li>
-            </ul>
-        </div>
+<body class="main-bg">
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container-fluid">
+        <!-- <div class="navbar-brand">课消平台</div> -->
     </div>
 </nav>
 <div class="container">
-    {% if session['role'] not in ['admin', 'manager'] %}
-        <div class="alert alert-danger mt-4">无权限访问</div>
-    {% else %}
-        <div class="main-card">
-            <h1 class="mb-4">编辑课消记录</h1>
-            <form method="post">
-                <div class="mb-3">
-                    <label for="student_id" class="form-label">学生</label>
-                    <select class="form-select" id="student_id" name="student_id" required>
-                        {% for student in students %}
-                        <option value="{{ student.id }}" {% if student.id == record.student_id %}selected{% endif %}>{{ student.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="course_id" class="form-label">课程</label>
-                    <select class="form-select" id="course_id" name="course_id" required>
-                        {% for course in courses %}
-                        <option value="{{ course.id }}" {% if course.id == record.course_id %}selected{% endif %}>{{ course.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="topic" class="form-label">上课主题/知识点</label>
-                    <input type="text" class="form-control" id="topic" name="topic" value="{{ record.topic }}" placeholder="如：循环、数组、函数...">
-                </div>
-                <div class="mb-3">
-                    <label for="hours_consumed" class="form-label">消耗课时</label>
-                    <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" value="{{ record.hours_consumed }}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="teacher" class="form-label">上课老师</label>
-                    <input type="text" class="form-control" id="teacher" name="teacher" value="{{ record.teacher }}" placeholder="如：张老师">
-                </div>
-                <div class="mb-3">
-                    <label for="date" class="form-label">日期</label>
-                    <input type="date" class="form-control" id="date" name="date" value="{{ record.date }}">
-                </div>
-                <div class="mb-3">
-                    <label for="note" class="form-label">备注</label>
-                    <input type="text" class="form-control" id="note" name="note" value="{{ record.note }}">
-                </div>
-                <button type="submit" class="btn btn-success">保存修改</button>
-                <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回</a>
-            </form>
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card p-4 my-4">
+                <h3 class="mb-4"><i class="fas fa-edit me-2"></i>编辑消课记录</h3>
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="student_id" class="form-label">学生</label>
+                        <select class="form-select" id="student_id" name="student_id" required>
+                            {% for student in students %}
+                            <option value="{{ student.id }}" {% if student.id == record.student_id %}selected{% endif %}>{{ student.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="course_id" class="form-label">课程</label>
+                        <select class="form-select" id="course_id" name="course_id" required>
+                            {% for course in courses %}
+                            <option value="{{ course.id }}" {% if course.id == record.course_id %}selected{% endif %}>{{ course.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="topic" class="form-label">上课主题/知识点</label>
+                        <input type="text" class="form-control" id="topic" name="topic" value="{{ record.topic }}" placeholder="如：循环、数组、函数...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="hours_consumed" class="form-label">消耗课时</label>
+                        <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" value="{{ record.hours_consumed }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacher" class="form-label">上课老师</label>
+                        <input type="text" class="form-control" id="teacher" name="teacher" value="{{ record.teacher }}" placeholder="如：张老师">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">日期</label>
+                        <input type="date" class="form-control" id="date" name="date" value="{{ record.date }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">备注</label>
+                        <input type="text" class="form-control" id="note" name="note" value="{{ record.note }}">
+                    </div>
+                    <button type="submit" class="btn btn-success">保存修改</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回</a>
+                </form>
+            </div>
         </div>
-    {% endif %}
+    </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 

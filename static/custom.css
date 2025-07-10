@@ -1,0 +1,443 @@
+/* 统一极简现代风格 */
+:root {
+  --main-radius: 8px;
+  --main-padding: 10px;
+  --main-font: 1rem;
+  --main-bg: #f7f8fa;
+  --main-bg-trans: rgba(255,255,255,0.85);
+  --main-border: #e5e7eb;
+  --main-muted: #b0b3b8;
+}
+
+body {
+  background: #fff;
+  color: var(--text-main);
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  background: rgba(30,32,36,0.60) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  backdrop-filter: blur(2px);
+}
+
+.navbar .navbar-brand {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+}
+
+.navbar .nav-link, .navbar .btn {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-radius: 6px;
+  margin: 0 4px;
+  padding: 8px 18px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+  display: inline-block;
+}
+.navbar .nav-link:hover, .navbar .btn:hover {
+  background: #1d4ed8 !important;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.card, .table-container, .form-container, .content-area, .modal-content {
+  background: var(--main-bg-trans) !important;
+  color: var(--text-main);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: var(--main-radius);
+  border: 1px solid var(--main-border);
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.table {
+  background: var(--main-bg-trans) !important;
+  color: var(--text-main);
+  border-radius: 6px;
+  border: 1px solid var(--main-border);
+  font-size: 0.98rem;
+  overflow: hidden;
+}
+
+th, td {
+  border-bottom: 1px solid var(--main-border);
+  padding: 8px 10px;
+}
+
+th {
+  background: #f3f4f6 !important;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+a, .btn-link {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover, .btn-link:hover {
+  color: #f59e42;
+}
+
+/* 极简统一按钮样式 */
+.btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-secondary, .btn-outline-secondary, .btn-back, .btn-back-home {
+  border-radius: 4px !important;
+  font-size: 0.97rem !important;
+  padding: 0 18px !important;
+  font-weight: 500;
+  min-width: 80px;
+  min-height: 32px;
+  height: 32px;
+  line-height: 32px;
+  box-shadow: none !important;
+  margin: 0 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+}
+.btn-primary {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn-primary:hover {
+  background: var(--primary-hover) !important;
+  color: #fff !important;
+}
+.btn-secondary, .btn-outline-secondary, .btn-back, .btn-back-home {
+  background: #fff !important;
+  color: var(--primary) !important;
+  border: 1.5px solid var(--primary) !important;
+}
+.btn-secondary:hover, .btn-outline-secondary:hover, .btn-back:hover, .btn-back-home:hover {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+.btn-danger {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn-danger:hover {
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+.btn[disabled], .btn:disabled {
+  background: #e5e7eb !important;
+  color: #b0b3b8 !important;
+  border: 1px solid #e5e7eb !important;
+  cursor: not-allowed !important;
+}
+/* 图标按钮间距 */
+.btn i, .btn svg {
+  margin-right: 6px;
+}
+
+/* 返回首页按钮专用优化 */
+.btn-back, .btn-back-home {
+  background: #f3f4f6 !important;
+  color: var(--primary) !important;
+  border: 1.5px solid var(--primary) !important;
+  border-radius: 6px !important;
+  font-weight: 600;
+  min-width: 90px;
+  min-height: 36px;
+  font-size: 0.98rem !important;
+}
+.btn-back:hover, .btn-back-home:hover {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+input, select, textarea {
+  border: 1px solid var(--main-border);
+  border-radius: 5px;
+  padding: 7px 10px;
+  background: var(--main-bg-trans) !important;
+  color: var(--text-main);
+  font-size: 0.98rem;
+  outline: none;
+  transition: border 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-main);
+  font-weight: 700;
+  margin-top: 0;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: var(--gray-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 4px;
+} 
+
+/* 1. 白色/浅色背景区域：深色文字 */
+/* body, .card, .table, .form-container, .modal-content, .content-area, input, select, textarea, th, td, h1, h2, h3, h4, h5, h6 {
+  color: var(--text-main) !important;
+  background: #fff !important;
+} */
+
+/* 2. 主色/深色背景区域：白色文字 */
+.btn-primary, .btn-success, .btn-danger, .btn-warning, .navbar .nav-link, .navbar .btn, .btn-info, .btn-dark, .table-primary, .table-success, .table-danger, .table-warning, .table-info, .table-dark {
+  color: #fff !important;
+}
+
+/* 3. 表格表头（浅灰背景，深色字） */
+th {
+  background: var(--gray-bg) !important;
+  color: var(--text-main) !important;
+}
+
+/* 4. 禁用/灰色按钮、表格斑马线等用浅灰背景+深色字 */
+.btn-secondary, .table-striped > tbody > tr:nth-of-type(odd) {
+  background: #f3f4f6 !important;
+  color: #101522 !important;
+}
+
+/* 5. 链接高亮色，悬停时主色/高亮色 */
+a, .btn-link {
+  color: #2563eb !important;
+}
+a:hover, .btn-link:hover {
+  color: #f59e42 !important;
+} 
+
+/* 首页及全站h1标题红蓝反转色 */
+h1, .card h1 {
+  color: #e53935 !important; /* 白色背景时为红色 */
+  font-size: 2rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.2rem;
+}
+
+/* 如果有深色/主色背景的标题，字体为蓝色 */
+.bg-primary h1, .bg-dark h1, .navbar .navbar-brand h1 {
+  color: #2563eb !important;
+} 
+
+/* 导航栏品牌区反转色 */
+.navbar .navbar-brand {
+  color: #2563eb !important;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+}
+.navbar.bg-primary .navbar-brand,
+.navbar.bg-dark .navbar-brand {
+  color: #fff !important;
+} 
+
+body.dark {
+  background: #181a20 !important;
+  color: #fff !important;
+}
+
+body.dark .card,
+body.dark .table,
+body.dark .form-container,
+body.dark .modal-content,
+body.dark .content-area,
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background: rgba(30,32,36,0.72) !important;
+  color: #fff !important;
+  border-color: #333 !important;
+}
+
+body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6 {
+  color: #fff !important;
+}
+
+body.dark th, body.dark td {
+  color: #fff !important;
+  background: rgba(30,32,36,0.72) !important;
+  border-color: #333 !important;
+}
+
+body.dark .navbar,
+body.dark .navbar .navbar-brand {
+  background: #181a20 !important;
+  color: #fff !important;
+}
+
+body.dark .btn, body.dark .btn-sm, body.dark .btn-group-sm > .btn {
+  background: #23262f !important;
+  color: #7ed957 !important;
+  border: 1.5px solid #7ed957 !important;
+}
+body.dark .btn:hover, body.dark .btn-sm:hover {
+  background: #7ed957 !important;
+  color: #23262f !important;
+}
+body.dark .btn-primary, body.dark .btn-sm.btn-primary {
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.dark .btn-primary:hover, body.dark .btn-sm.btn-primary:hover {
+  background: #1d4ed8 !important;
+  color: #fff !important;
+}
+body.dark .btn-danger, body.dark .btn-sm.btn-danger {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.dark .btn-danger:hover, body.dark .btn-sm.btn-danger:hover {
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+body.dark .btn[disabled], body.dark .btn:disabled, body.dark .btn-sm[disabled], body.dark .btn-sm:disabled {
+  background: #23262f !important;
+  color: #b0b3b8 !important;
+  border: 1px solid #23262f !important;
+  cursor: not-allowed !important;
+}
+
+body.dark a, body.dark .btn-link {
+  color: #4f9cff !important;
+}
+body.dark a:hover, body.dark .btn-link:hover {
+  color: #f59e42 !important;
+}
+
+body.dark .table-striped > tbody > tr:nth-of-type(odd) {
+  background: #23262f !important;
+}
+
+body.dark ::-webkit-scrollbar {
+  background: #23262f;
+}
+body.dark ::-webkit-scrollbar-thumb {
+  background: #333;
+} 
+
+/* 深色模式全站覆盖增强 */
+body.dark .alert,
+body.dark .table-responsive,
+body.dark .form-select,
+body.dark .form-control,
+body.dark .bg-light,
+body.dark .bg-white,
+body.dark .text-muted,
+body.dark .form-text,
+body.dark .modal-header,
+body.dark .modal-footer {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #333 !important;
+}
+
+body.dark .text-muted,
+body.dark .form-text {
+  color: #b0b3b8 !important;
+}
+
+body.dark .bg-primary,
+body.dark .table-primary {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+body.dark .bg-success,
+body.dark .table-success {
+  background: var(--success) !important;
+  color: #fff !important;
+}
+
+body.dark .bg-warning,
+body.dark .table-warning {
+  background: var(--warning) !important;
+  color: #fff !important;
+}
+
+body.dark .bg-danger,
+body.dark .table-danger {
+  background: var(--danger) !important;
+  color: #fff !important;
+} 
+
+body.dark .main-bg {
+  /* background: #181a20 !important; */
+  color: #fff !important;
+} 
+
+body.main-bg {
+  background: url('/static/img/background.jpg') center center/cover no-repeat fixed !important;
+  min-height: 100vh;
+  position: relative;
+} 
+
+/* 统一字体大小和间距 */
+body, html {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* 其它细节优化可继续补充 */ 
+
+/* 深色模式下小按钮优化 */
+body.dark .btn-sm, body.dark .btn-group-sm > .btn {
+  min-height: 28px;
+  height: 28px;
+  font-size: 0.92rem !important;
+  border-radius: 4px !important;
+  padding: 0 12px !important;
+  box-shadow: none !important;
+}
+body.dark .btn-sm.btn-primary {
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.dark .btn-sm.btn-secondary, body.dark .btn-sm.btn-outline-secondary {
+  background: #23262f !important;
+  color: #7ed957 !important;
+  border: 1.5px solid #7ed957 !important;
+}
+body.dark .btn-sm.btn-secondary:hover, body.dark .btn-sm.btn-outline-secondary:hover {
+  background: #7ed957 !important;
+  color: #23262f !important;
+}
+body.dark .btn-sm.btn-danger {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.dark .btn-sm.btn-danger:hover {
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+body.dark .btn-sm[disabled], body.dark .btn-sm:disabled {
+  background: #23262f !important;
+  color: #b0b3b8 !important;
+  border: 1px solid #23262f !important;
+  cursor: not-allowed !important;
+} 
+
+body.dark .btn-warning, body.dark .btn-sm.btn-warning {
+  background: #ffd600 !important;
+  color: #23262f !important;
+  border: none !important;
+}
+body.dark .btn-warning:hover, body.dark .btn-sm.btn-warning:hover {
+  background: #ffb300 !important;
+  color: #23262f !important;
+} 

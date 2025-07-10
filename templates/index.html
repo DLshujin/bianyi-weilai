@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
     <style>
         body {
             background: #f6f8fa;
@@ -215,10 +216,10 @@
     }
     </script>
 </head>
-<body>
-<nav class="navbar navbar-expand-lg mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('index') }}"><span class="logo"><i class="fa-solid fa-graduation-cap"></i></span>课消记录</a>
+<body class="main-bg">
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#"><i class="fas fa-graduation-cap me-2"></i>课消平台</a>
         <div class="mx-auto">
             <button class="btn btn-sm btn-outline-light" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i> 主题切换</button>
         </div>
@@ -244,150 +245,154 @@
     </div>
 </nav>
 <div class="container">
-    <div class="main-card">
-        <h1 class="mb-4">学生信息与消课记录</h1>
-        <form class="row mb-4" method="get" action="/">
-            <div class="col-md-4 col-8 mb-2 mb-md-0">
-                <input type="text" class="form-control" name="search_name" placeholder="输入学生姓名或拼音首字母" value="{{ search_name }}">
-            </div>
-            <div class="col-md-3 col-8 mb-2 mb-md-0">
-                <select class="form-select" name="course_filter">
-                    <option value="">全部课程</option>
-                    <option value="C++" {% if course_filter=='C++' %}selected{% endif %}>C++</option>
-                    <option value="GOC" {% if course_filter=='GOC' %}selected{% endif %}>GOC</option>
-                    <option value="图形化" {% if course_filter=='图形化' %}selected{% endif %}>图形化</option>
-                    <option value="other" {% if course_filter=='other' %}selected{% endif %}>其他</option>
-                </select>
-            </div>
-            <div class="col-md-2 col-4 mb-2 mb-md-0">
-                <button type="submit" class="btn btn-primary w-100">搜索</button>
-            </div>
-            <div class="col-md-3 col-12">
-                <button type="submit" name="export" value="1" class="btn btn-success w-100"><i class="fa fa-download"></i> 导出Excel</button>
-            </div>
-        </form>
-        {% for sid, info in student_info.items() %}
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <b>{{ info.student.name }}</b>（联系方式：{{ info.student.contact or '无' }}）
-            </div>
-            <div class="card-body">
-                <h5>课程信息</h5>
-                <div class="table-responsive mb-3">
-                    <table class="table table-bordered table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>课程</th>
-                                <th>总课时</th>
-                                <th>单价</th>
-                                <th>已上课时</th>
-                                <th>剩余课时</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for c in info.courses %}
-                            <tr>
-                                <td>{{ c.course_name }}</td>
-                                <td>{{ c.total_hours }}</td>
-                                <td>{{ c.price }}</td>
-                                <td>{{ c.consumed_hours }}</td>
-                                <td>{{ c.remaining_hours }}</td>
-                            </tr>
-                        {% endfor %}
-                        {% if info.courses|length == 0 %}
-                            <tr><td colspan="5" class="text-center text-muted">无课程</td></tr>
-                        {% endif %}
-                        </tbody>
-                    </table>
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="card p-4 mb-4">
+                <h1 class="mb-4">学生信息与消课记录</h1>
+                <form class="row mb-4" method="get" action="/">
+                    <div class="col-md-4 col-8 mb-2 mb-md-0">
+                        <input type="text" class="form-control" name="search_name" placeholder="输入学生姓名或拼音首字母" value="{{ search_name }}">
+                    </div>
+                    <div class="col-md-3 col-8 mb-2 mb-md-0">
+                        <select class="form-select" name="course_filter">
+                            <option value="">全部课程</option>
+                            <option value="C++" {% if course_filter=='C++' %}selected{% endif %}>C++</option>
+                            <option value="GOC" {% if course_filter=='GOC' %}selected{% endif %}>GOC</option>
+                            <option value="图形化" {% if course_filter=='图形化' %}selected{% endif %}>图形化</option>
+                            <option value="other" {% if course_filter=='other' %}selected{% endif %}>其他</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-4 mb-2 mb-md-0">
+                        <button type="submit" class="btn btn-primary w-100">搜索</button>
+                    </div>
+                    <div class="col-md-3 col-12">
+                        <button type="submit" name="export" value="1" class="btn btn-success w-100"><i class="fa fa-download"></i> 导出Excel</button>
+                    </div>
+                </form>
+                {% for sid, info in student_info.items() %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <b>{{ info.student.name }}</b>（联系方式：{{ info.student.contact or '无' }}）
+                    </div>
+                    <div class="card-body">
+                        <h5>课程信息</h5>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered table-sm align-middle">
+            <thead>
+                <tr>
+                                        <th>课程</th>
+                    <th>总课时</th>
+                                        <th>单价</th>
+                                        <th>已上课时</th>
+                    <th>剩余课时</th>
+                </tr>
+            </thead>
+            <tbody>
+                                {% for c in info.courses %}
+                <tr>
+                                        <td>{{ c.course_name }}</td>
+                                        <td>{{ c.total_hours }}</td>
+                                        <td>{{ c.price }}</td>
+                                        <td>{{ c.consumed_hours }}</td>
+                                        <td>{{ c.remaining_hours }}</td>
+                                    </tr>
+                                {% endfor %}
+                                {% if info.courses|length == 0 %}
+                                    <tr><td colspan="5" class="text-center text-muted">无课程</td></tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <h5>消课记录</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>课程</th>
+                                        <th>课时</th>
+                                        <th>主题</th>
+                                        <th>老师</th>
+                                        <th>备注</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for r in info.records %}
+                                    <tr>
+                                        <td>{{ r.date }}</td>
+                                        <td>{{ r.course_name }}</td>
+                                        <td>{{ r.hours_consumed }}</td>
+                                        <td>{{ r.topic }}</td>
+                                        <td>{{ r.teacher }}</td>
+                                        <td>{{ r.note }}</td>
+                </tr>
+            {% endfor %}
+                                {% if info.records|length == 0 %}
+                                    <tr><td colspan="6" class="text-center text-muted">无消课记录</td></tr>
+                                {% endif %}
+            </tbody>
+        </table>
+        </div>
+                    </div>
                 </div>
-                <h5>消课记录</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>日期</th>
-                                <th>课程</th>
-                                <th>课时</th>
-                                <th>主题</th>
-                                <th>老师</th>
-                                <th>备注</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for r in info.records %}
-                            <tr>
-                                <td>{{ r.date }}</td>
-                                <td>{{ r.course_name }}</td>
-                                <td>{{ r.hours_consumed }}</td>
-                                <td>{{ r.topic }}</td>
-                                <td>{{ r.teacher }}</td>
-                                <td>{{ r.note }}</td>
-                            </tr>
-                        {% endfor %}
-                        {% if info.records|length == 0 %}
-                            <tr><td colspan="6" class="text-center text-muted">无消课记录</td></tr>
-                        {% endif %}
-                        </tbody>
-                    </table>
+                {% else %}
+                <div class="alert alert-info">未找到相关学生。</div>
+                {% endfor %}
+                {% if session['role'] in ['admin', 'manager'] and student_info %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <b>全部消课记录</b>
+        </div>
+                    <div class="card-body">
+        <div class="table-responsive">
+                            <table class="table table-bordered table-hover table-sm align-middle">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                                        <th>学生</th>
+                                        <th>课程</th>
+                                        <th>课时</th>
+                                        <th>主题</th>
+                                        <th>老师</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                                {% set all_records = [] %}
+                                {% for info in student_info.values() %}
+                                    {% for r in info.records %}
+                                        {% set _ = all_records.append({
+                                            'date': r['date'],
+                                            'student': info.student.name,
+                                            'course': r['course_name'],
+                                            'hours': r['hours_consumed'],
+                                            'topic': r['topic'],
+                                            'teacher': r['teacher'],
+                                            'note': r['note']
+                                        }) %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for r in all_records|sort(attribute='date', reverse=True) %}
+                                <tr>
+                                    <td>{{ r.date }}</td>
+                                    <td>{{ r.student }}</td>
+                                    <td>{{ r.course }}</td>
+                                    <td>{{ r.hours }}</td>
+                                    <td>{{ r.topic }}</td>
+                                    <td>{{ r.teacher }}</td>
+                                    <td>{{ r.note }}</td>
+                </tr>
+            {% else %}
+                                <tr><td colspan="7" class="text-center text-muted">暂无消课记录</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+                        </div>
+                    </div>
                 </div>
+                {% endif %}
             </div>
         </div>
-        {% else %}
-        <div class="alert alert-info">未找到相关学生。</div>
-        {% endfor %}
-        {% if session['role'] in ['admin', 'manager'] and student_info %}
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <b>全部消课记录</b>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>日期</th>
-                                <th>学生</th>
-                                <th>课程</th>
-                                <th>课时</th>
-                                <th>主题</th>
-                                <th>老师</th>
-                                <th>备注</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% set all_records = [] %}
-                        {% for info in student_info.values() %}
-                            {% for r in info.records %}
-                                {% set _ = all_records.append({
-                                    'date': r['date'],
-                                    'student': info.student.name,
-                                    'course': r['course_name'],
-                                    'hours': r['hours_consumed'],
-                                    'topic': r['topic'],
-                                    'teacher': r['teacher'],
-                                    'note': r['note']
-                                }) %}
-                            {% endfor %}
-                        {% endfor %}
-                        {% for r in all_records|sort(attribute='date', reverse=True) %}
-                        <tr>
-                            <td>{{ r.date }}</td>
-                            <td>{{ r.student }}</td>
-                            <td>{{ r.course }}</td>
-                            <td>{{ r.hours }}</td>
-                            <td>{{ r.topic }}</td>
-                            <td>{{ r.teacher }}</td>
-                            <td>{{ r.note }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="7" class="text-center text-muted">暂无消课记录</td></tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

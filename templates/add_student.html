@@ -19,21 +19,21 @@
             <div class="col-12 col-lg-8">
                 <div class="card p-4 my-4">
                     <h3 class="mb-4"><i class="fas fa-user-plus me-2"></i>添加学生</h3>
-                    <form method="post">
+                    <form method="post" autocomplete="off">
                         <div class="mb-3">
                             <label for="name" class="form-label">姓名</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+                            <input type="text" class="form-control" id="name" name="name" required autocomplete="off">
                         </div>
                         <div class="mb-3">
                             <label for="contact" class="form-label">联系方式</label>
-                            <input type="text" class="form-control" id="contact" name="contact">
+                            <input type="text" class="form-control" id="contact" name="contact" autocomplete="off">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">课程信息</label>
                             <div id="courses-container"></div>
                             <button type="button" class="btn btn-info btn-sm mt-2" onclick="addCourseRow()"><i class="fa fa-plus"></i> 添加一门课程</button>
                         </div>
-                        <button type="submit" class="btn btn-primary">提交</button>
+                        <button type="submit" class="btn btn-success">提交</button>
                         <a href="{{ url_for('students') }}" class="btn btn-secondary ms-2">返回</a>
                     </form>
                 </div>
@@ -58,10 +58,10 @@ window.addCourseRow = function() {
             <input type="text" class="form-control mt-2 custom-course-input" name="custom_course_name" placeholder="请输入课程名称" style="display:none;">
         </div>
         <div class="col-3">
-            <input type="number" class="form-control" name="total_hours" placeholder="课时" min="1" required>
+            <input type="number" class="form-control" name="total_hours" placeholder="课时" min="1" required autocomplete="off">
         </div>
         <div class="col-3">
-            <input type="number" class="form-control" name="price" placeholder="价格" min="0" step="0.01" required>
+            <input type="number" class="form-control" name="price" placeholder="价格" min="0" step="0.01" required autocomplete="off">
         </div>
         <div class="col-1 text-end">
             <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()"><i class="fa fa-trash"></i></button>
@@ -85,6 +85,13 @@ window.onload = function() {
         addCourseRow();
     }
 }
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.value = '';
+  });
+});
 </script>
 </body>
 </html> 

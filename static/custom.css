@@ -273,8 +273,9 @@ body.dark th, body.dark td {
 
 body.dark .navbar,
 body.dark .navbar .navbar-brand {
-  background: #181a20 !important;
+  background: transparent !important;
   color: #fff !important;
+  box-shadow: none !important;
 }
 
 body.dark .btn, body.dark .btn-sm, body.dark .btn-group-sm > .btn {

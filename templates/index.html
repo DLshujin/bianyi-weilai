@@ -220,8 +220,13 @@
 <nav class="navbar navbar-expand-lg navbar-dark mb-4">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="#"><i class="fas fa-graduation-cap me-2"></i>课消平台</a>
-        <div class="mx-auto">
+        <div class="mx-auto d-flex align-items-center gap-2">
             <button class="btn btn-sm btn-outline-light" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i> 主题切换</button>
+            {% if session['role'] == 'admin' %}
+            <form method="post" action="{{ url_for('remind_all_teachers') }}" style="display:inline;">
+              <button type="submit" class="btn btn-warning btn-sm ms-2"><i class="fa fa-bell me-1"></i>一键提醒老师</button>
+            </form>
+            {% endif %}
         </div>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -235,6 +240,8 @@
                 {% if session['role'] == 'admin' %}
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('user_list') }}">用户管理</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('operation_logs') }}">操作日志</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('email_config') }}">邮箱配置</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('email_test') }}">测试邮件发送</a></li>
                 {% endif %}
                 {% if session['role'] in ['admin', 'manager'] %}
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('schedule_list') }}">排课管理</a></li>
@@ -248,13 +255,19 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
             <div class="card p-4 mb-4">
-                <h1 class="mb-4">学生信息与消课记录</h1>
-                <form class="row mb-4" method="get" action="/">
+                <h1 class="mb-4"><i class="fas fa-graduation-cap me-2"></i>课消平台</h1>
+                {% if session['role'] == 'admin' %}
+                <div class="mb-3 d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('email_config') }}" class="btn btn-outline-primary">邮箱配置</a>
+                    <a href="{{ url_for('email_test') }}" class="btn btn-outline-success">测试邮件发送</a>
+                </div>
+                {% endif %}
+                <form autocomplete="off" class="row mb-4" method="get" action="/">
                     <div class="col-md-4 col-8 mb-2 mb-md-0">
-                        <input type="text" class="form-control" name="search_name" placeholder="输入学生姓名或拼音首字母" value="{{ search_name }}">
+                        <input autocomplete="off" type="text" class="form-control" name="search_name" placeholder="输入学生姓名或拼音首字母" value="{{ search_name }}">
                     </div>
                     <div class="col-md-3 col-8 mb-2 mb-md-0">
-                        <select class="form-select" name="course_filter">
+                        <select autocomplete="off" class="form-select" name="course_filter">
                             <option value="">全部课程</option>
                             <option value="C++" {% if course_filter=='C++' %}selected{% endif %}>C++</option>
                             <option value="GOC" {% if course_filter=='GOC' %}selected{% endif %}>GOC</option>
@@ -396,5 +409,12 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.value = '';
+  });
+});
+</script>
 </body>
 </html>

@@ -137,20 +137,27 @@
     {% if error %}
       <div class="login-error">{{ error }}</div>
     {% endif %}
-    <form method="post">
+    <form method="post" autocomplete="off">
       <div class="input-group">
-        <input type="text" name="username" placeholder="账号" required>
+        <input type="text" name="username" placeholder="账号" required autocomplete="off">
         <span class="input-icon"><i class="fa-solid fa-user"></i></span>
       </div>
       <div class="input-group">
-        <input type="password" name="password" placeholder="密码" required>
+        <input type="password" name="password" placeholder="密码" required autocomplete="off">
         <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
       </div>
       <div class="login-options">
-        <label><input type="checkbox" name="remember"> 记住</label>
+        <label><input type="checkbox" name="remember" autocomplete="off"> 记住</label>
       </div>
       <button type="submit" class="btn login-btn">登录</button>
     </form>
   </div>
+  <script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.value = '';
+  });
+});
+</script>
 </body>
 </html> 

@@ -19,7 +19,7 @@
         <div class="col-12 col-lg-8">
             <div class="card p-4 my-4">
                 <h3 class="mb-4"><i class="fas fa-book-open me-2"></i>添加消课记录</h3>
-                <form method="post">
+                <form method="post" autocomplete="off">
                     <div class="mb-3">
                         <label for="student_id" class="form-label">学生</label>
                         <select class="form-select" id="student_id" name="student_id" multiple required>
@@ -41,23 +41,23 @@
                     </div>
                     <div class="mb-3">
                         <label for="teacher" class="form-label">上课老师</label>
-                        <input type="text" class="form-control" id="teacher" name="teacher" placeholder="如：张老师">
+                        <input type="text" class="form-control" id="teacher" name="teacher" placeholder="如：张老师" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="topic" class="form-label">上课主题/知识点</label>
-                        <input type="text" class="form-control" id="topic" name="topic" placeholder="如：循环、数组、函数...">
+                        <input type="text" class="form-control" id="topic" name="topic" placeholder="如：循环、数组、函数..." autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="hours_consumed" class="form-label">消耗课时</label>
-                        <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" required>
+                        <input type="number" class="form-control" id="hours_consumed" name="hours_consumed" min="1" required autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="date" class="form-label">日期</label>
-                        <input type="date" class="form-control" id="date" name="date">
+                        <input type="date" class="form-control" id="date" name="date" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="note" class="form-label">备注</label>
-                        <input type="text" class="form-control" id="note" name="note">
+                        <input type="text" class="form-control" id="note" name="note" autocomplete="off">
                     </div>
                     <button type="submit" class="btn btn-success">提交</button>
                     <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">返回</a>
@@ -67,5 +67,12 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.value = '';
+  });
+});
+</script>
 </body>
 </html>

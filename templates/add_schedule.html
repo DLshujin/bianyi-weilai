@@ -19,46 +19,53 @@
       <div class="col-12 col-lg-8">
         <div class="card p-4 my-4">
           <h3 class="mb-4"><i class="fas fa-calendar-plus me-2"></i>添加排课</h3>
-          <form method="post">
-            <div class="row g-3">
-                <div class="col-md-4">
+          <form method="post" autocomplete="off">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
                     <label for="course_id" class="form-label">课程</label>
                     <select class="form-select" id="course_id" name="course_id" required>
                         <option value="">请选择课程</option>
-                        <option value="C++">C++</option>
-                        <option value="GOC">GOC</option>
-                        <option value="图形化">图形化</option>
-                        <option value="other">其他</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.name }}</option>
+                        {% endfor %}
                     </select>
-                    <input type="text" class="form-control mt-2" id="custom_course" name="custom_course" placeholder="请输入课程名称" style="display:none;">
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-6">
+                    <label for="teacher" class="form-label">上课老师</label>
+                    <select class="form-select" id="teacher" name="teacher" required>
+                        <option value="">请选择老师</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.username }}">{{ teacher.username }}（{{ teacher.email }}）</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
                     <label for="student_ids" class="form-label">学生（可多选）</label>
                     <div class="d-flex align-items-center">
-                        <select class="form-select" id="student_ids" name="student_ids" multiple required style="width: 100%;">
+                        <select class="form-select" id="student_ids" name="student_ids" multiple required style="min-width: 180px;">
                             {% for student in students %}
                             <option value="{{ student.id }}" data-courses="{{ student.courses|join(',') }}" {% if schedule and (student.id|string) in (schedule.student_ids.split(',')) %}selected{% endif %}>{{ student.name }}</option>
                             {% endfor %}
                         </select>
-                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="selectAll">全选</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="deselectAll">全不选</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="selectAllStudents(true)">全选</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="selectAllStudents(false)">全不选</button>
                     </div>
                     <small class="form-text text-muted">可搜索、全选/全不选，课程联动筛选</small>
                 </div>
-            </div>
-            <div class="row g-3 mt-2">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <label for="start_datetime" class="form-label">开始时间</label>
-                    <input type="datetime-local" class="form-control" id="start_datetime" name="start_datetime" value="{{ schedule.start_datetime if schedule else '' }}" required>
+                    <input type="datetime-local" class="form-control" id="start_datetime" name="start_datetime" value="{{ schedule.start_datetime if schedule else '' }}" required autocomplete="off">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <label for="end_datetime" class="form-label">结束时间</label>
-                    <input type="datetime-local" class="form-control" id="end_datetime" name="end_datetime" value="{{ schedule.end_datetime if schedule else '' }}" required>
+                    <input type="datetime-local" class="form-control" id="end_datetime" name="end_datetime" value="{{ schedule.end_datetime if schedule else '' }}" required autocomplete="off">
                 </div>
             </div>
-            <div class="mb-3 mt-2">
+            <div class="mb-3">
                 <label for="note" class="form-label">备注</label>
-                <input type="text" class="form-control" id="note" name="note" value="{{ schedule.note if schedule else '' }}">
+                <input type="text" class="form-control" id="note" name="note" autocomplete="off">
             </div>
             <button type="submit" class="btn btn-success">提交</button>
             <a href="{{ url_for('schedule_list') }}" class="btn btn-secondary ms-2">返回</a>
@@ -80,11 +87,6 @@
       // 课程选择逻辑
       $('#course_id').on('change', function() {
           var val = $(this).val();
-          if(val === 'other') {
-              $('#custom_course').show().attr('required', true);
-          } else {
-              $('#custom_course').hide().val('').removeAttr('required');
-          }
           // 联动筛选学生
           $('#student_ids option').each(function() {
               var courses = $(this).data('courses') ? $(this).data('courses').toString().split(',') : [];
@@ -96,16 +98,22 @@
           });
           $('#student_ids').trigger('change.select2');
       });
-      // 全选/全不选
-      $('#selectAll').click(function() {
-          $('#student_ids option:visible').prop('selected', true);
-          $('#student_ids').trigger('change');
-      });
-      $('#deselectAll').click(function() {
-          $('#student_ids option').prop('selected', false);
-          $('#student_ids').trigger('change');
-      });
   });
   </script>
+  <script>
+function selectAllStudents(flag) {
+    const options = document.getElementById('student_ids').options;
+    for (let i = 0; i < options.length; i++) {
+        options[i].selected = flag;
+    }
+}
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.value = '';
+  });
+});
+</script>
 </body>
 </html> 

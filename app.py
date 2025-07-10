@@ -8,9 +8,27 @@ from functools import wraps
 import os
 import json
 from pypinyin import lazy_pinyin, Style
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
+
+EMAIL_CONFIG_FILE = 'email_config.json'
+
+def load_email_config():
+    try:
+        with open(EMAIL_CONFIG_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_email_config(config):
+    with open(EMAIL_CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
 
 def get_db_connection():
     db_path = os.path.abspath('school.db')
@@ -55,10 +73,14 @@ def admin_or_manager_required(f):
 def login():
     error = None
     if request.method == 'POST':
-        username = request.form['username']
+        login_id = request.form['username']
         password = request.form['password']
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
+        # 先按用户名查找
+        user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (login_id, password)).fetchone()
+        # 如果用户名查不到，再按邮箱查找
+        if not user:
+            user = conn.execute('SELECT * FROM user WHERE email = ? AND password = ?', (login_id, password)).fetchone()
         conn.close()
         if user:
             session['user_id'] = user['id']
@@ -66,7 +88,7 @@ def login():
             session['role'] = user['role']
             return redirect(url_for('index'))
         else:
-            error = '用户名或密码错误'
+            error = '用户名/邮箱或密码错误'
     return render_template('login.html', error=error)
 
 @app.route('/logout')
@@ -380,24 +402,32 @@ def user_list():
 @app.route('/users/add', methods=['GET', 'POST'])
 @admin_or_manager_required
 def add_user():
+    import traceback
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         role = request.form['role']
+        email = request.form['email']
+        print(f"[DEBUG] add_user: username={username}, password={password}, role={role}, email={email}")
         # 只有admin能添加manager，admin和manager都不能添加admin
         if role == 'admin':
             flash('不能添加admin账号')
+            print('[DEBUG] 拒绝添加admin账号')
             return redirect(url_for('user_list'))
         if session.get('role') != 'admin' and role == 'manager':
             flash('无权限添加该类型用户')
+            print('[DEBUG] 非admin尝试添加manager')
             return redirect(url_for('user_list'))
         conn = get_db_connection()
         try:
-            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)', (username, password, role))
+            conn.execute('INSERT INTO user (username, password, role, email) VALUES (?, ?, ?, ?)', (username, password, role, email))
             conn.commit()
             flash('添加成功')
+            print('[DEBUG] 添加用户成功')
         except Exception as e:
             flash(f'添加失败：{e}')
+            print('[ERROR] 添加用户失败:', e)
+            traceback.print_exc()
         conn.close()
         return redirect(url_for('user_list'))
     return render_template('add_user.html')
@@ -420,15 +450,16 @@ def edit_user(user_id):
         username = request.form['username']
         password = request.form['password']
         role = request.form['role']
+        email = request.form['email']
         # manager不能将user改为admin/manager
         if session.get('role') != 'admin' and role in ['admin', 'manager']:
             flash('无权限修改为该类型用户')
             return redirect(url_for('user_list'))
         try:
             if password:
-                conn.execute('UPDATE user SET username=?, password=?, role=? WHERE id=?', (username, password, role, user_id))
+                conn.execute('UPDATE user SET username=?, password=?, role=?, email=? WHERE id=?', (username, password, role, email, user_id))
             else:
-                conn.execute('UPDATE user SET username=?, role=? WHERE id=?', (username, role, user_id))
+                conn.execute('UPDATE user SET username=?, role=?, email=? WHERE id=?', (username, role, email, user_id))
             conn.commit()
             flash('修改成功')
         except Exception as e:
@@ -484,50 +515,23 @@ def add_schedule():
     conn = get_db_connection()
     courses = conn.execute('SELECT * FROM course').fetchall()
     students = conn.execute('SELECT * FROM student').fetchall()
+    # 获取所有有邮箱的manager/admin账号
+    teachers = conn.execute("SELECT * FROM user WHERE role IN ('admin', 'manager') AND email IS NOT NULL AND email != ''").fetchall()
     if request.method == 'POST':
-        course_val = request.form['course_id']
-        if course_val == 'other':
-            custom_course = request.form.get('custom_course', '').strip()
-            if not custom_course:
-                flash('请选择或填写课程名称！')
-                conn.close()
-                return redirect(request.url)
-            # 自动创建新课程
-            cur = conn.cursor()
-            cur.execute('INSERT INTO course (name, total_hours) VALUES (?, ?)', (custom_course, 0))
-            course_id = cur.lastrowid
-        else:
-            # 固定课程名，查找或创建
-            cur = conn.cursor()
-            cur.execute('SELECT id FROM course WHERE name=?', (course_val,))
-            row = cur.fetchone()
-            if row:
-                course_id = row[0]
-            else:
-                cur.execute('INSERT INTO course (name, total_hours) VALUES (?, ?)', (course_val, 0))
-                course_id = cur.lastrowid
-        student_ids = request.form.getlist('student_ids')
-        teacher = request.form.get('teacher')
+        course_id = request.form['course_id']
+        student_ids = ','.join(request.form.getlist('student_ids'))
+        teacher = request.form['teacher']
         start_datetime = request.form['start_datetime']
         end_datetime = request.form['end_datetime']
         note = request.form['note']
-        # 冲突检测（同一学生同一时间段有排课则冲突）
-        for sid in student_ids:
-            conflict = conn.execute('SELECT * FROM schedule WHERE ((start_datetime<=? AND end_datetime>=?) OR (start_datetime<=? AND end_datetime>=?)) AND instr(student_ids, ?) > 0', (end_datetime, end_datetime, start_datetime, start_datetime, sid)).fetchone()
-            if conflict:
-                flash(f'学生ID {sid} 在该时间段已排课，请检查！')
-                conn.close()
-                return redirect(request.url)
-        student_ids_str = ','.join(student_ids)
         conn.execute('INSERT INTO schedule (course_id, student_ids, teacher, start_datetime, end_datetime, note) VALUES (?, ?, ?, ?, ?, ?)',
-                     (course_id, student_ids_str, teacher, start_datetime, end_datetime, note))
+                     (course_id, student_ids, teacher, start_datetime, end_datetime, note))
         conn.commit()
-        # add_schedule 日志
-        conn.execute('INSERT INTO record_log (record_id, operation_type, operator, operation_time, before_content, after_content) VALUES (?, ?, ?, ?, ?, ?)', (None, 'add_schedule', session.get('username'), datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, json.dumps({'course_id': course_id, 'student_ids': student_ids_str, 'teacher': teacher, 'start_datetime': start_datetime, 'end_datetime': end_datetime, 'note': note})))
         conn.close()
+        flash('排课添加成功')
         return redirect(url_for('schedule_list'))
     conn.close()
-    return render_template('add_schedule.html', courses=courses, students=students)
+    return render_template('add_schedule.html', courses=courses, students=students, teachers=teachers)
 
 @app.route('/schedules/edit/<int:schedule_id>', methods=['GET', 'POST'])
 @admin_or_manager_required
@@ -711,6 +715,145 @@ def delete_course(course_id):
     conn.close()
     flash('课程已删除！')
     return redirect(url_for('course_list'))
+
+@app.route('/email_config', methods=['GET', 'POST'])
+@admin_required
+def email_config():
+    config = load_email_config()
+    if request.method == 'POST':
+        qq_email = request.form['qq_email']
+        qq_auth_code = request.form['qq_auth_code']
+        config['qq_email'] = qq_email
+        config['qq_auth_code'] = qq_auth_code
+        save_email_config(config)
+        flash('邮箱配置已保存')
+        return redirect(url_for('email_config'))
+    return render_template('email_config.html', config=config)
+
+def send_email(to_email, subject, content, html=False):
+    config = load_email_config()
+    from_email = config.get('qq_email')
+    auth_code = config.get('qq_auth_code')
+    if not from_email or not auth_code:
+        return False, '请先在邮箱配置中填写发件邮箱和授权码'
+    try:
+        msg = MIMEText(content, 'html' if html else 'plain', 'utf-8')
+        msg['From'] = from_email
+        msg['To'] = to_email
+        msg['Subject'] = Header(subject, 'utf-8')
+        server = smtplib.SMTP_SSL('smtp.qq.com', 465)
+        server.login(from_email, auth_code)
+        server.sendmail(from_email, [to_email], msg.as_string())
+        server.quit()
+        return True, '邮件发送成功'
+    except Exception as e:
+        return False, f'邮件发送失败: {e}'
+
+def get_tomorrow_courses():
+    conn = get_db_connection()
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+    schedules = conn.execute('SELECT * FROM schedule WHERE date(start_datetime)=?', (tomorrow,)).fetchall()
+    conn.close()
+    return schedules
+
+def get_today_unconsumed_courses():
+    conn = get_db_connection()
+    today = datetime.now().strftime('%Y-%m-%d')
+    # 假设 status 字段为“未消课”或空表示未消课
+    schedules = conn.execute('SELECT * FROM schedule WHERE date(end_datetime)=? AND (status IS NULL OR status="未消课")', (today,)).fetchall()
+    conn.close()
+    return schedules
+
+def send_course_reminders():
+    # 上课前一天提醒
+    schedules = get_tomorrow_courses()
+    for s in schedules:
+        conn = get_db_connection()
+        teacher = s['teacher']
+        user = conn.execute('SELECT * FROM user WHERE username=?', (teacher,)).fetchone()
+        # 获取课程名
+        course_row = conn.execute('SELECT name FROM course WHERE id=?', (s['course_id'],)).fetchone()
+        course_name = course_row['name'] if course_row else s['course_id']
+        # 获取学生名
+        student_names = []
+        for sid in s['student_ids'].split(','):
+            stu = conn.execute('SELECT name FROM student WHERE id=?', (sid,)).fetchone()
+            if stu: student_names.append(stu['name'])
+        conn.close()
+        if user and user['email']:
+            subject = f"明天有课提醒：{s['start_datetime']} 课程：{course_name}"
+            content = f"""
+            <html><body>
+            <p>老师您好，您<b>明天有一节课安排</b>：</p>
+            <ul style='list-style:none;padding-left:0;'>
+              <li><b>课程名称：</b>{course_name}</li>
+              <li><b>学生名单：</b>{'、'.join(student_names)}</li>
+              <li><b>上课时间：</b>{s['start_datetime']}</li>
+              <li><b>结束时间：</b>{s['end_datetime']}</li>
+              <li><b>备注：</b>{s['note'] or '无'}</li>
+            </ul>
+            <p style='color:#2563eb;font-weight:bold;'>请提前做好准备，谢谢！</p>
+            </body></html>
+            """
+            send_email(user['email'], subject, content, html=True)
+    # 课后提醒消课
+    schedules = get_today_unconsumed_courses()
+    for s in schedules:
+        conn = get_db_connection()
+        teacher = s['teacher']
+        user = conn.execute('SELECT * FROM user WHERE username=?', (teacher,)).fetchone()
+        # 获取课程名
+        course_row = conn.execute('SELECT name FROM course WHERE id=?', (s['course_id'],)).fetchone()
+        course_name = course_row['name'] if course_row else s['course_id']
+        # 获取学生名
+        student_names = []
+        for sid in s['student_ids'].split(','):
+            stu = conn.execute('SELECT name FROM student WHERE id=?', (sid,)).fetchone()
+            if stu: student_names.append(stu['name'])
+        conn.close()
+        if user and user['email']:
+            subject = f"今日课程消课提醒：{s['start_datetime']} 课程：{course_name}"
+            content = f"""
+            <html><body>
+            <p>老师您好，您<b>今日有一节课尚未消课</b>：</p>
+            <ul style='list-style:none;padding-left:0;'>
+              <li><b>课程名称：</b>{course_name}</li>
+              <li><b>学生名单：</b>{'、'.join(student_names)}</li>
+              <li><b>上课时间：</b>{s['start_datetime']}</li>
+              <li><b>结束时间：</b>{s['end_datetime']}</li>
+              <li><b>备注：</b>{s['note'] or '无'}</li>
+            </ul>
+            <p style='color:#e53935;font-weight:bold;'>请及时登录系统进行消课操作，谢谢！</p>
+            </body></html>
+            """
+            send_email(user['email'], subject, content, html=True)
+
+# 启动APScheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(send_course_reminders, 'cron', hour=20, minute=0)  # 每天20:00执行
+scheduler.start()
+
+@app.route('/email_test', methods=['GET', 'POST'])
+@admin_required
+def email_test():
+    msg = None
+    if request.method == 'POST':
+        to_email = request.form['to_email']
+        subject = request.form['subject']
+        content = request.form['content']
+        success, info = send_email(to_email, subject, content)
+        msg = info
+    return render_template('email_test.html', msg=msg)
+
+@app.route('/remind_all_teachers', methods=['POST'])
+@admin_required
+def remind_all_teachers():
+    try:
+        send_course_reminders()
+        flash('已一键提醒所有待上课和待消课的老师！')
+    except Exception as e:
+        flash(f'提醒失败：{e}')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     import os

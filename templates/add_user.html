@@ -19,14 +19,18 @@
         <div class="col-12 col-lg-8">
             <div class="card p-4 my-4">
                 <h3 class="mb-4"><i class="fas fa-user-plus me-2"></i>添加用户</h3>
-                <form method="post">
+                <form method="post" autocomplete="off">
                     <div class="mb-3">
                         <label for="username" class="form-label">用户名</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+                        <input type="text" class="form-control" id="username" name="username" required autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">密码</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <input type="password" class="form-control" id="password" name="password" required autocomplete="off">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="email" name="email" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">角色</label>
@@ -52,6 +56,21 @@ function toggleTheme() {
 window.onload = function() {
     if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 }
+document.getElementById('role').addEventListener('change', function() {
+    var emailInput = document.getElementById('email');
+    if (this.value === 'manager' || this.value === 'admin') {
+        emailInput.required = true;
+    } else {
+        emailInput.required = false;
+    }
+});
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.value = '';
+  });
+});
 </script>
 </body>
 </html> 

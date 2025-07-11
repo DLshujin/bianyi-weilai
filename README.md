@@ -73,6 +73,11 @@ python clear_db.py
 ```
 - 所有数据将被清空，仅保留 admin 账号，密码为 888888
 
+## 文件清理与部署说明
+- 已添加标准 .gitignore，自动忽略 venv、__pycache__、school.db、.idea、.vscode 等无用文件和目录。
+- 建议部署时仅上传代码、模板、静态资源和 requirements.txt，不要上传 school.db、venv 等本地文件。
+- 服务器请用自己的虚拟环境，并用 `python init_db.py` 初始化数据库。
+
 ## 常见问题
 - **依赖未安装**：请用 pip 安装缺失的库
 - **database is locked**：请关闭占用数据库的程序或重启电脑

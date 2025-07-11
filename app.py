@@ -69,17 +69,22 @@ def admin_or_manager_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# 工具函数：角色映射
+# 角色判断工具函数
 
-def is_manager(role):
-    return role in ['admin', 'manager', 'teacher']
+def is_admin(role):
+    return role == 'admin'
 
-def is_user(role):
+def is_teacher(role):
+    return role in ['manager', 'teacher']
+
+def is_student(role):
     return role in ['user', 'student']
 
-# 替换所有 ['admin', 'manager'] 为 is_manager(role)
-# 替换所有 'user' 为 is_user(role)
-# 替换 session['role'] == 'manager' 为 session['role'] in ['manager', 'teacher']
+# --- 权限修正示例 ---
+# 1. 邮箱配置、测试邮件、操作日志 仅admin可访问
+# 2. 添加学生、排课仅admin/teacher可访问
+# 3. 学生只能看自己，不能增删改
+# 4. 其他涉及权限判断的地方均用上述函数替换
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -123,7 +128,8 @@ def index():
     course_filter = request.args.get('course_filter', '').strip()
     export = request.args.get('export', '')
     # 获取所有学生
-    students = conn.execute('SELECT * FROM student').fetchall()
+    username = session.get('username')
+    students = conn.execute('SELECT * FROM student WHERE name=? OR contact=?', (username, username)).fetchall()
     # 获取所有课程
     courses = {c['id']: c for c in conn.execute('SELECT * FROM course').fetchall()}
     course_list = list(courses.values())
@@ -146,8 +152,8 @@ def index():
         pinyin_full = ''.join(lazy_pinyin(s['name'], style=Style.NORMAL)).lower()
         pinyin_abbr = ''.join([p[0] for p in lazy_pinyin(s['name'], style=Style.NORMAL)]).lower()
         # 权限过滤：普通用户只能看自己
-        if not is_manager(role):
-            if s['name'] != username:
+        if not is_teacher(role):
+            if s['name'] != username and s['contact'] != username: # 登录用户名与学生姓名或手机号不匹配
                 continue
         # 仅有搜索条件时才过滤
         if search_name:
@@ -207,8 +213,8 @@ def index():
         filename = f'{table}.xlsx'
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     # 课程剩余详情筛选参数
-    student_name = request.args.get('student_name', '').strip() if is_manager(role) else ''
-    course_name = request.args.get('course_name', '').strip() if is_manager(role) else ''
+    student_name = request.args.get('student_name', '').strip() if is_teacher(role) else ''
+    course_name = request.args.get('course_name', '').strip() if is_teacher(role) else ''
     sort_by = request.args.get('sort_by', 'remain_hours')
     sort_order = request.args.get('sort_order', 'desc')
     # 查询所有学生-课程关联及相关信息
@@ -224,7 +230,7 @@ def index():
         WHERE 1=1
     '''
     params = []
-    if not is_manager(role):
+    if not is_teacher(role):
         # 普通用户只能看到与自己手机号绑定的学生
         student = conn.execute('SELECT * FROM student WHERE contact=?', (username,)).fetchone()
         if student:

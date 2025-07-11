@@ -53,7 +53,7 @@ def admin_required(f):
         if 'user_id' not in session:
             return redirect(url_for('login'))
         if session.get('username') != 'admin':
-            flash('无权限访问')
+            flash('无权限访问，请联系管理员')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
@@ -64,7 +64,7 @@ def admin_or_manager_required(f):
         if 'user_id' not in session:
             return redirect(url_for('login'))
         if session.get('role') not in ['admin', 'manager', 'teacher']:
-            flash('无权限访问')
+            flash('无权限访问，请联系管理员')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
@@ -443,13 +443,29 @@ def edit_student(student_id):
     if request.method == 'POST':
         name = request.form['name']
         contact = request.form['contact']
-        conn.execute('UPDATE student SET name=?, contact=? WHERE id=?', (name, contact, student_id))
+        email = request.form.get('email', '')
+        class_name = request.form.get('class_name', '')
+        remark = request.form.get('remark', '')
+        conn.execute('UPDATE student SET name=?, contact=?, email=?, class_name=?, remark=? WHERE id=?', (name, contact, email, class_name, remark, student_id))
+        # 处理课程编辑
+        # 1. 先删除所有该学生的student_course
+        conn.execute('DELETE FROM student_course WHERE student_id=?', (student_id,))
+        # 2. 再插入表单中的所有课程
+        course_ids = request.form.getlist('course_id')
+        total_hours_list = request.form.getlist('course_total_hours')
+        price_list = request.form.getlist('course_price')
+        for i in range(len(course_ids)):
+            if course_ids[i] and total_hours_list[i] and price_list[i]:
+                conn.execute('INSERT INTO student_course (student_id, course_id, total_hours, price) VALUES (?, ?, ?, ?)', (student_id, course_ids[i], total_hours_list[i], price_list[i]))
         conn.commit()
         conn.close()
         flash('学生信息已更新！')
         return redirect(url_for('students'))
+    # GET请求，读取学生课程
+    student_courses = conn.execute('SELECT sc.*, c.name as course_name FROM student_course sc JOIN course c ON sc.course_id = c.id WHERE sc.student_id=?', (student_id,)).fetchall()
+    course_list = conn.execute('SELECT * FROM course').fetchall()
     conn.close()
-    return render_template('edit_student.html', student=student)
+    return render_template('edit_student.html', student=student, student_courses=student_courses, course_list=course_list)
 
 # 删除课程管理相关路由
 
@@ -681,9 +697,9 @@ def edit_schedule(schedule_id):
 @app.route('/schedules/delete/<int:schedule_id>', methods=['POST'])
 @admin_or_manager_required
 def delete_schedule(schedule_id):
-    # 仅admin可删除
-    if session.get('role') != 'admin':
-        flash('只有管理员可以删除排课！')
+    # admin、manager、teacher均可删除
+    if session.get('role') not in ['admin', 'manager', 'teacher']:
+        flash('无权限删除排课，请联系管理员')
         return redirect(url_for('schedule_list'))
     conn = get_db_connection()
     schedule = conn.execute('SELECT * FROM schedule WHERE id=?', (schedule_id,)).fetchone()

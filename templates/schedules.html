@@ -54,14 +54,20 @@
                         <td>{{ s.note }}</td>
                         <td>{{ s.status if s.status else '未消课' }}</td>
                         <td>
-                            <a href="{{ url_for('edit_schedule', schedule_id=s.id) }}" class="btn btn-warning btn-sm me-1"><i class="fa fa-edit me-1"></i>编辑</a>
-                            <form action="{{ url_for('delete_schedule', schedule_id=s.id) }}" method="post" style="display:inline-block;" autocomplete="off">
-                                <button type="submit" class="btn btn-danger btn-sm me-1"><i class="fa fa-trash me-1"></i>删除</button>
-                            </form>
-                            {% if s.status != '已消课' %}
-                            <a href="#" class="btn btn-success btn-sm me-1" onclick="openConsumeModal({{ s.id }})"><i class="fa fa-check-circle me-1"></i>点名消课</a>
+                            {% if session['role'] in ['admin', 'manager', 'teacher'] %}
+                                <a href="{{ url_for('edit_schedule', schedule_id=s.id) }}" class="btn btn-warning btn-sm me-1">编辑</a>
+                                <form action="{{ url_for('delete_schedule', schedule_id=s.id) }}" method="post" style="display:inline-block;" autocomplete="off">
+                                    <button type="submit" class="btn btn-danger btn-sm me-1">删除</button>
+                                </form>
+                                {% if s.status != '已消课' %}
+                                <a href="#" class="btn btn-success btn-sm me-1" onclick="openConsumeModal({{ s.id }})"><i class="fa fa-check-circle me-1"></i>点名消课</a>
+                                {% else %}
+                                <button class="btn btn-secondary btn-sm me-1" disabled><i class="fa fa-check-double me-1"></i>已消课</button>
+                                {% endif %}
                             {% else %}
-                            <button class="btn btn-secondary btn-sm me-1" disabled><i class="fa fa-check-double me-1"></i>已消课</button>
+                                <button class="btn btn-warning btn-sm me-1" disabled title="请联系管理员">编辑</button>
+                                <button class="btn btn-danger btn-sm me-1" disabled title="请联系管理员">删除</button>
+                                <button class="btn btn-secondary btn-sm me-1" disabled title="请联系管理员">消课</button>
                             {% endif %}
                         </td>
                     </tr>

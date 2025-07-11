@@ -62,7 +62,7 @@
                 <form method="post" autocomplete="off">
                     <div class="mb-3">
                         <label for="username" class="form-label">用户名</label>
-                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required autocomplete="off">
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username or '' }}" required autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">密码（留空则不修改）</label>
@@ -70,7 +70,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">邮箱</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required autocomplete="off">
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email or '' }}" required autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">角色</label>
@@ -86,12 +86,5 @@
         </div>
     </div>
 </div>
-<script>
-window.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('input, textarea').forEach(function(el) {
-    el.value = '';
-  });
-});
-</script>
 </body>
 </html> 

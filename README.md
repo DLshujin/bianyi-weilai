@@ -79,6 +79,21 @@ python clear_db.py
 - 建议部署时仅上传代码、模板、静态资源和 requirements.txt，不要上传 school.db、venv 等本地文件。
 - 服务器请用自己的虚拟环境，并用 `python init_db.py` 初始化数据库。
 
+## 数据库升级说明
+- 如果添加课程时报“table course has no column named price”，请运行：
+  ```bash
+  python add_price_column.py
+  ```
+  该脚本会为 course 表自动添加 price 字段。
+
+## 老师权限优化说明
+- 老师（teacher/manager）均可访问学生管理、课程管理、排课管理等页面。
+- 排课时可选择所有有邮箱的老师（teacher/manager/admin）作为上课老师。
+- 首页入口和权限展示已针对老师角色优化。
+
+## 编辑体验说明
+- 所有有权限用户（如admin、manager、teacher）在编辑用户、学生、课程、排课等信息时，表单会自动展示原有数据，用户只需修改需要变动的部分，无需重复填写。
+
 ## 常见问题
 - **依赖未安装**：请用 pip 安装缺失的库
 - **database is locked**：请关闭占用数据库的程序或重启电脑

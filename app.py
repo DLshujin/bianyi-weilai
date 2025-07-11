@@ -396,8 +396,6 @@ def delete_student(student_id):
         # 删除学生相关的所有数据
         # 删除学生课程记录
         conn.execute('DELETE FROM student_course WHERE student_id = ?', (student_id,))
-        # 删除学生消费记录
-        conn.execute('DELETE FROM record WHERE student_id = ?', (student_id,))
         # 删除学生排课记录
         conn.execute("DELETE FROM schedule WHERE ',' || student_ids || ',' LIKE ?", (f'%,{student_id},%',))
         # 最后删除学生本身

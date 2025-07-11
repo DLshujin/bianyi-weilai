@@ -186,36 +186,97 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 4px;
 } 
 
-/* 1. 白色/浅色背景区域：深色文字 */
-/* body, .card, .table, .form-container, .modal-content, .content-area, input, select, textarea, th, td, h1, h2, h3, h4, h5, h6 {
+/* 优化：统一按钮、表格、字体等大小、圆角、间距等样式，主题下只区分颜色 */
+
+/* 1. 全局统一大小、圆角、间距、字体 */
+.btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-secondary, .btn-outline-secondary, .btn-back, .btn-back-home {
+  border-radius: 4px !important;
+  font-size: 0.97rem !important;
+  padding: 0 18px !important;
+  font-weight: 500;
+  min-width: 80px;
+  min-height: 32px;
+  height: 32px;
+  line-height: 32px;
+  box-shadow: none !important;
+  margin: 0 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+}
+.table {
+  border-radius: 6px;
+  border: 1px solid var(--main-border);
+  font-size: 0.98rem;
+  overflow: hidden;
+}
+input, select, textarea {
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-size: 0.98rem;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-top: 0;
+}
+
+/* 2. 白色主题颜色 */
+body, .card, .table, .form-container, .modal-content, .content-area, input, select, textarea, th, td, h1, h2, h3, h4, h5, h6 {
   color: var(--text-main) !important;
   background: #fff !important;
-} */
-
-/* 2. 主色/深色背景区域：白色文字 */
-.btn-primary, .btn-success, .btn-danger, .btn-warning, .navbar .nav-link, .navbar .btn, .btn-info, .btn-dark, .table-primary, .table-success, .table-danger, .table-warning, .table-info, .table-dark {
+}
+.btn-primary {
+  background: var(--primary) !important;
   color: #fff !important;
+  border: none !important;
+}
+.btn-secondary, .btn-outline-secondary, .btn-back, .btn-back-home {
+  background: #fff !important;
+  color: var(--primary) !important;
+  border: 1.5px solid var(--primary) !important;
+}
+.btn-danger {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn[disabled], .btn:disabled {
+  background: #e5e7eb !important;
+  color: #b0b3b8 !important;
+  border: 1px solid #e5e7eb !important;
+  cursor: not-allowed !important;
 }
 
-/* 3. 表格表头（浅灰背景，深色字） */
-th {
-  background: var(--gray-bg) !important;
-  color: var(--text-main) !important;
+/* 3. 黑色主题只覆盖颜色 */
+body.dark, body.dark .card, body.dark .table, body.dark .form-container, body.dark .modal-content, body.dark .content-area, body.dark input, body.dark select, body.dark textarea, body.dark th, body.dark td, body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6 {
+  background: rgba(30,32,36,0.72) !important;
+  color: #fff !important;
+  border-color: #333 !important;
+}
+body.dark .btn, body.dark .btn-primary, body.dark .btn-success, body.dark .btn-danger, body.dark .btn-warning, body.dark .btn-secondary, body.dark .btn-outline-secondary, body.dark .btn-back, body.dark .btn-back-home {
+  background: #23262f !important;
+  color: #7ed957 !important;
+  border: 1.5px solid #7ed957 !important;
+}
+body.dark .btn-primary {
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.dark .btn-danger {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+}
+body.dark .btn[disabled], body.dark .btn:disabled {
+  background: #23262f !important;
+  color: #b0b3b8 !important;
+  border: 1px solid #23262f !important;
+  cursor: not-allowed !important;
 }
 
-/* 4. 禁用/灰色按钮、表格斑马线等用浅灰背景+深色字 */
-.btn-secondary, .table-striped > tbody > tr:nth-of-type(odd) {
-  background: #f3f4f6 !important;
-  color: #101522 !important;
-}
-
-/* 5. 链接高亮色，悬停时主色/高亮色 */
-a, .btn-link {
-  color: #2563eb !important;
-}
-a:hover, .btn-link:hover {
-  color: #f59e42 !important;
-} 
+/* 4. 响应式部分保持不变，已全局适配 */
 
 /* 首页及全站h1标题红蓝反转色 */
 h1, .card h1 {
@@ -246,29 +307,6 @@ h1, .card h1 {
 body.dark {
   background: #181a20 !important;
   color: #fff !important;
-}
-
-body.dark .card,
-body.dark .table,
-body.dark .form-container,
-body.dark .modal-content,
-body.dark .content-area,
-body.dark input,
-body.dark select,
-body.dark textarea {
-  background: rgba(30,32,36,0.72) !important;
-  color: #fff !important;
-  border-color: #333 !important;
-}
-
-body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6 {
-  color: #fff !important;
-}
-
-body.dark th, body.dark td {
-  color: #fff !important;
-  background: rgba(30,32,36,0.72) !important;
-  border-color: #333 !important;
 }
 
 body.dark .navbar,
@@ -441,4 +479,258 @@ body.dark .btn-warning, body.dark .btn-sm.btn-warning {
 body.dark .btn-warning:hover, body.dark .btn-sm.btn-warning:hover {
   background: #ffb300 !important;
   color: #23262f !important;
+} 
+
+/* ====== 响应式字体、按钮、表格自适应 ====== */
+html {
+  font-size: 16px;
+}
+@media (max-width: 1200px) {
+  html { font-size: 15px; }
+}
+@media (max-width: 992px) {
+  html { font-size: 14px; }
+}
+@media (max-width: 768px) {
+  html { font-size: 13px; }
+}
+@media (max-width: 576px) {
+  html { font-size: 12px; }
+}
+
+.btn {
+  padding: 0.5em 1.5em;
+  font-size: 1rem;
+}
+@media (max-width: 768px) {
+  .btn {
+    padding: 0.4em 1em;
+    font-size: 0.95rem;
+  }
+}
+@media (max-width: 576px) {
+  .btn {
+    padding: 0.3em 0.8em;
+    font-size: 0.9rem;
+  }
+}
+
+.table {
+  font-size: 1rem;
+}
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.95rem;
+  }
+}
+@media (max-width: 576px) {
+  .table {
+    font-size: 0.85rem;
+  }
+}
+
+input, select, textarea {
+  font-size: 1rem;
+}
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 0.95rem;
+  }
+}
+@media (max-width: 576px) {
+  input, select, textarea {
+    font-size: 0.9rem;
+  }
+}
+
+.card, .modal-content, .form-control {
+  font-size: 1rem;
+}
+@media (max-width: 768px) {
+  .card, .modal-content, .form-control {
+    font-size: 0.95rem;
+  }
+}
+@media (max-width: 576px) {
+  .card, .modal-content, .form-control {
+    font-size: 0.9rem;
+  }
+}
+
+/* 表格横向滚动容器 */
+.table-responsive {
+  overflow-x: auto;
+} 
+
+/* ===== 导航栏背景与按钮尺寸优化 ===== */
+.navbar {
+  background: #f7f8fa !important;
+  box-shadow: 0 2px 8px rgba(30,32,36,0.06);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.3rem 2vw;
+  min-height: 48px;
+}
+.navbar .navbar-brand {
+  font-size: 1.5rem;
+  margin-right: 1vw;
+}
+.navbar .btn, .navbar .nav-link, .navbar .btn-outline-primary, .navbar .btn-outline-warning {
+  font-size: 0.98rem;
+  padding: 4px 14px;
+  min-height: 32px;
+  height: 32px;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+@media (max-width: 992px) {
+  .navbar .navbar-brand { font-size: 1.1rem; }
+  .navbar .btn, .navbar .nav-link, .navbar .btn-outline-primary, .navbar .btn-outline-warning {
+    font-size: 0.92rem;
+    padding: 3px 10px;
+    min-height: 28px;
+    height: 28px;
+    margin-right: 4px;
+  }
+}
+@media (max-width: 576px) {
+  .navbar { padding: 0.2rem 1vw; }
+  .navbar .navbar-brand { font-size: 0.95rem; }
+  .navbar .btn, .navbar .nav-link, .navbar .btn-outline-primary, .navbar .btn-outline-warning {
+    font-size: 0.88rem;
+    padding: 2px 6px;
+    min-height: 24px;
+    height: 24px;
+    margin-right: 2px;
+  }
+} 
+
+/* ===== 彻底移除白色主题，强制全局黑色主题 ===== */
+body, .main-bg, .card, .table, .form-container, .modal-content, .content-area, input, select, textarea, th, td, h1, h2, h3, h4, h5, h6 {
+  background: #181a20 !important;
+  color: #fff !important;
+  border-color: #333 !important;
+}
+
+.navbar {
+  background: #23262f !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  border-bottom: 1px solid #333;
+  padding: 0.3rem 2vw;
+  min-height: 48px;
+}
+
+.navbar .navbar-brand {
+  color: #7ed957 !important;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-right: 1vw;
+}
+
+.navbar .btn, .navbar .nav-link, .navbar .btn-outline-primary, .navbar .btn-outline-warning {
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  margin-right: 6px;
+  padding: 4px 14px;
+  min-height: 32px;
+  height: 32px;
+}
+
+.btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-secondary, .btn-outline-secondary, .btn-back, .btn-back-home {
+  background: #23262f !important;
+  color: #7ed957 !important;
+  border: 1.5px solid #7ed957 !important;
+  border-radius: 4px !important;
+  font-size: 0.97rem !important;
+  padding: 0 18px !important;
+  font-weight: 500;
+  min-width: 80px;
+  min-height: 32px;
+  height: 32px;
+  line-height: 32px;
+  box-shadow: none !important;
+  margin: 0 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+}
+.btn-primary {
+  background: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn-primary:hover {
+  background: #1d4ed8 !important;
+  color: #fff !important;
+}
+.btn-danger {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn-danger:hover {
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+.btn[disabled], .btn:disabled {
+  background: #23262f !important;
+  color: #b0b3b8 !important;
+  border: 1px solid #23262f !important;
+  cursor: not-allowed !important;
+}
+
+.table {
+  background: #23262f !important;
+  color: #fff !important;
+  border-radius: 6px;
+  border: 1px solid #333;
+  font-size: 0.98rem;
+  overflow: hidden;
+}
+th, td {
+  border-bottom: 1px solid #333;
+  padding: 8px 10px;
+}
+th {
+  background: #23262f !important;
+  font-weight: 600;
+  color: #7ed957 !important;
+}
+
+input, select, textarea {
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 7px 10px;
+  background: #23262f !important;
+  color: #fff !important;
+  font-size: 0.98rem;
+  outline: none;
+  transition: border 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #7ed957;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #7ed957 !important;
+  font-weight: 700;
+  margin-top: 0;
+}
+
+body, html {
+  font-size: 15px;
+  line-height: 1.6;
+} 
+
+input::placeholder, textarea::placeholder {
+  color: #b0b3b8 !important;
+  opacity: 1;
+}
+body.dark input::placeholder, body.dark textarea::placeholder {
+  color: #7ed957 !important;
+  opacity: 1;
 } 

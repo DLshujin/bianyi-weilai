@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card p-4 mb-4">
+    <h2 class="mb-3">课程剩余详情</h2>
+    <form class="row g-2 mb-3" method="get">
+      <div class="col-md-2 col-6">
+        <input type="text" class="form-control" name="student_name" placeholder="请输入学生姓名" value="{{ request.args.get('student_name','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="text" class="form-control" name="course_name" placeholder="请输入课程名称" value="{{ request.args.get('course_name','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="number" class="form-control" name="min_total_hours" placeholder="最小总课时" value="{{ request.args.get('min_total_hours','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="number" class="form-control" name="max_total_hours" placeholder="最大总课时" value="{{ request.args.get('max_total_hours','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="number" class="form-control" name="min_remain_hours" placeholder="最小剩余课时" value="{{ request.args.get('min_remain_hours','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="number" class="form-control" name="max_remain_hours" placeholder="最大剩余课时" value="{{ request.args.get('max_remain_hours','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="date" class="form-control" name="start_time" placeholder="起始上课日期" value="{{ request.args.get('start_time','') }}">
+      </div>
+      <div class="col-md-2 col-6">
+        <input type="date" class="form-control" name="end_time" placeholder="结束上课日期" value="{{ request.args.get('end_time','') }}">
+      </div>
+      <div class="col-md-2 col-12">
+        <button type="submit" class="btn btn-primary w-100">筛选</button>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th><a href="?{{ request.query_string|safe|replace('sort_by='~sort_by, 'sort_by=student')|replace('sort_order='~sort_order, 'sort_order='~('desc' if sort_by=='student' and sort_order=='asc' else 'asc')) }}">学生{% if sort_by=='student' %}{{ '↓' if sort_order=='asc' else '↑' }}{% endif %}</a></th>
+            <th><a href="?{{ request.query_string|safe|replace('sort_by='~sort_by, 'sort_by=course')|replace('sort_order='~sort_order, 'sort_order='~('desc' if sort_by=='course' and sort_order=='asc' else 'asc')) }}">课程{% if sort_by=='course' %}{{ '↓' if sort_order=='asc' else '↑' }}{% endif %}</a></th>
+            <th><a href="?{{ request.query_string|safe|replace('sort_by='~sort_by, 'sort_by=total_hours')|replace('sort_order='~sort_order, 'sort_order='~('desc' if sort_by=='total_hours' and sort_order=='asc' else 'asc')) }}">总课时{% if sort_by=='total_hours' %}{{ '↓' if sort_order=='asc' else '↑' }}{% endif %}</a></th>
+            <th>已消耗课时</th>
+            <th><a href="?{{ request.query_string|safe|replace('sort_by='~sort_by, 'sort_by=remain_hours')|replace('sort_order='~sort_order, 'sort_order='~('desc' if sort_by=='remain_hours' and sort_order=='asc' else 'asc')) }}">剩余课时{% if sort_by=='remain_hours' %}{{ '↓' if sort_order=='asc' else '↑' }}{% endif %}</a></th>
+            <th>单价</th>
+            <th><a href="?{{ request.query_string|safe|replace('sort_by='~sort_by, 'sort_by=first_class_time')|replace('sort_order='~sort_order, 'sort_order='~('desc' if sort_by=='first_class_time' and sort_order=='asc' else 'asc')) }}">首次上课{% if sort_by=='first_class_time' %}{{ '↓' if sort_order=='asc' else '↑' }}{% endif %}</a></th>
+            <th><a href="?{{ request.query_string|safe|replace('sort_by='~sort_by, 'sort_by=last_class_time')|replace('sort_order='~sort_order, 'sort_order='~('desc' if sort_by=='last_class_time' and sort_order=='asc' else 'asc')) }}">最近上课{% if sort_by=='last_class_time' %}{{ '↓' if sort_order=='asc' else '↑' }}{% endif %}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.student_name }}</td>
+            <td>{{ row.course_name }}</td>
+            <td>{{ row.total_hours }}</td>
+            <td>{{ row.consumed_hours }}</td>
+            <td>{{ row.remain_hours }}</td>
+            <td>{{ row.price }}</td>
+            <td>{{ row.first_class_time or '-' }}</td>
+            <td>{{ row.last_class_time or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %} 

@@ -131,11 +131,14 @@
       }
     </style>
 </head>
-<body class="login-bg">
+<body class="main-bg dark">
   <div class="login-mask"></div>
   <div class="login-card">
     {% if error %}
       <div class="login-error">{{ error }}</div>
+      {% if forgot_tip %}
+        <div class="login-error" style="color:#ffd600; border-color:#ffd600; background:rgba(255,214,0,0.10); margin-top:-10px;">{{ forgot_tip }}</div>
+      {% endif %}
     {% endif %}
     <form method="post" autocomplete="off">
       <div class="input-group">

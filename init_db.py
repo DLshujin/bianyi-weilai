@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS schedule (
     course_id INTEGER NOT NULL,
     student_ids TEXT NOT NULL, -- 逗号分隔的学生ID
     teacher TEXT,
-    date TEXT NOT NULL,
-    time TEXT,
+    start_datetime TEXT NOT NULL,
+    end_datetime TEXT NOT NULL,
     note TEXT,
     status TEXT NOT NULL DEFAULT '未消课',
     created_at TEXT DEFAULT (datetime('now', 'localtime')),

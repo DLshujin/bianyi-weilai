@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}课消平台{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block head %}{% endblock %}
+</head>
+<body class="main-bg dark">
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-graduation-cap me-2"></i>课消平台
+            </a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if session['role'] in ['admin', 'manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('students') }}">学生管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('course_list') }}">课程管理</a></li>
+                    {% endif %}
+                    {% if session['role'] == 'admin' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('user_list') }}">用户管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('operation_logs') }}">操作日志</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('email_config') }}">邮箱配置</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('email_test') }}">测试邮件发送</a></li>
+                    {% endif %}
+                    {% if session['role'] in ['admin', 'manager'] %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('schedule_list') }}">排课管理</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">退出</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

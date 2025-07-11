@@ -72,6 +72,7 @@ def admin_or_manager_required(f):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
+    forgot_tip = None
     if request.method == 'POST':
         login_id = request.form['username']
         password = request.form['password']
@@ -81,15 +82,20 @@ def login():
         # 如果用户名查不到，再按邮箱查找
         if not user:
             user = conn.execute('SELECT * FROM user WHERE email = ? AND password = ?', (login_id, password)).fetchone()
-        conn.close()
         if user:
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
+            conn.close()
             return redirect(url_for('index'))
         else:
+            # 检查该用户名是否为普通用户
+            u = conn.execute('SELECT * FROM user WHERE username = ? OR email = ?', (login_id, login_id)).fetchone()
+            if u and u['role'] == 'user':
+                forgot_tip = '如忘记密码请联系上课老师'
             error = '用户名/邮箱或密码错误'
-    return render_template('login.html', error=error)
+        conn.close()
+    return render_template('login.html', error=error, forgot_tip=forgot_tip)
 
 @app.route('/logout')
 def logout():
@@ -186,8 +192,54 @@ def index():
         df.to_excel(output, index=False)
         output.seek(0)
         return send_file(output, as_attachment=True, download_name='学生课程信息.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    # 课程剩余详情筛选参数
+    student_name = request.args.get('student_name', '').strip() if role in ['admin', 'manager'] else ''
+    course_name = request.args.get('course_name', '').strip() if role in ['admin', 'manager'] else ''
+    sort_by = request.args.get('sort_by', 'remain_hours')
+    sort_order = request.args.get('sort_order', 'desc')
+    # 查询所有学生-课程关联及相关信息
+    query = '''
+        SELECT s.name as student_name, c.name as course_name, sc.total_hours, sc.price,
+               IFNULL(SUM(r.hours_consumed), 0) as consumed_hours,
+               (sc.total_hours - IFNULL(SUM(r.hours_consumed), 0)) as remain_hours,
+               MIN(r.date) as first_class_time, MAX(r.date) as last_class_time
+        FROM student_course sc
+        JOIN student s ON sc.student_id = s.id
+        JOIN course c ON sc.course_id = c.id
+        LEFT JOIN record r ON r.student_id = s.id AND r.course_id = c.id
+        WHERE 1=1
+    '''
+    params = []
+    if role not in ['admin', 'manager']:
+        # 普通用户只能看到与自己手机号绑定的学生
+        student = conn.execute('SELECT * FROM student WHERE contact=?', (username,)).fetchone()
+        if student:
+            query += ' AND s.id=?'
+            params.append(student['id'])
+        else:
+            query += ' AND 1=0'  # 没有绑定学生
+    else:
+        if student_name:
+            query += ' AND s.name LIKE ?'
+            params.append(f'%{student_name}%')
+        if course_name:
+            query += ' AND c.name LIKE ?'
+            params.append(f'%{course_name}%')
+    query += ' GROUP BY sc.id'
+    # 排序
+    sort_map = {
+        'student': 'student_name',
+        'course': 'course_name',
+        'total_hours': 'total_hours',
+        'remain_hours': 'remain_hours',
+        'first_class_time': 'first_class_time',
+        'last_class_time': 'last_class_time'
+    }
+    sort_col = sort_map.get(sort_by, 'remain_hours')
+    query += f' ORDER BY {sort_col} {"DESC" if sort_order=="desc" else "ASC"}'
+    remain_rows = conn.execute(query, params).fetchall()
     conn.close()
-    return render_template('index.html', student_info=student_info, search_name=search_name, course_list=course_list, course_filter=course_filter)
+    return render_template('index.html', student_info=student_info, search_name=search_name, course_list=course_list, course_filter=course_filter, remain_rows=remain_rows, request=request, role=role)
 
 @app.route('/add', methods=['GET', 'POST'])
 @admin_or_manager_required
@@ -294,8 +346,18 @@ def add_student():
         custom_courses = request.form.getlist('custom_course_name')
         total_hours_list = request.form.getlist('total_hours')
         price_list = request.form.getlist('price')
+        email = request.form.get('email', '').strip()
+        
+        # 先插入学生信息
         cursor.execute('INSERT INTO student (name, contact) VALUES (?, ?)', (name, contact))
         student_id = cursor.lastrowid
+        
+        # 自动创建普通用户账号（用户名为学生姓名，密码为手机号，邮箱可选）
+        user_exists = cursor.execute('SELECT 1 FROM user WHERE username=?', (name,)).fetchone()
+        if not user_exists:
+            cursor.execute('INSERT INTO user (username, password, role, email) VALUES (?, ?, ?, ?)', (name, contact, 'user', email))
+        
+        # 插入学生课程信息
         for idx, course_sel in enumerate(course_selects):
             if course_sel == 'other':
                 course_name = custom_courses[idx].strip()
@@ -311,8 +373,10 @@ def add_student():
                     course_id = cursor.lastrowid
                 cursor.execute('INSERT INTO student_course (student_id, course_id, total_hours, price) VALUES (?, ?, ?, ?)',
                                (student_id, course_id, total_hours_list[idx], price_list[idx]))
+        
         conn.commit()
         conn.close()
+        flash('学生添加成功！')
         return redirect(url_for('students'))
     return render_template('add_student.html')
 
@@ -320,8 +384,30 @@ def add_student():
 @admin_or_manager_required
 def delete_student(student_id):
     conn = get_db_connection()
-    conn.execute('DELETE FROM student WHERE id = ?', (student_id,))
-    conn.commit()
+    
+    # 先获取学生信息，用于删除对应的用户账号
+    student = conn.execute('SELECT * FROM student WHERE id = ?', (student_id,)).fetchone()
+    
+    if student:
+        # 删除对应的普通用户账号（如果存在）
+        # 根据学生姓名查找对应的用户账号
+        conn.execute('DELETE FROM user WHERE username = ? AND role = "user"', (student['name'],))
+        
+        # 删除学生相关的所有数据
+        # 删除学生课程记录
+        conn.execute('DELETE FROM student_course WHERE student_id = ?', (student_id,))
+        # 删除学生消费记录
+        conn.execute('DELETE FROM record WHERE student_id = ?', (student_id,))
+        # 删除学生排课记录
+        conn.execute('DELETE FROM schedule WHERE student_id = ?', (student_id,))
+        # 最后删除学生本身
+        conn.execute('DELETE FROM student WHERE id = ?', (student_id,))
+        
+        conn.commit()
+        flash('学生及其相关数据已删除')
+    else:
+        flash('学生不存在')
+    
     conn.close()
     return redirect(url_for('students'))
 
@@ -854,6 +940,77 @@ def remind_all_teachers():
     except Exception as e:
         flash(f'提醒失败：{e}')
     return redirect(url_for('index'))
+
+@app.route('/student_course_manage', methods=['GET'])
+@admin_or_manager_required
+def student_course_manage():
+    conn = get_db_connection()
+    # 获取筛选参数
+    student_name = request.args.get('student_name', '').strip()
+    course_name = request.args.get('course_name', '').strip()
+    min_total_hours = request.args.get('min_total_hours', '')
+    max_total_hours = request.args.get('max_total_hours', '')
+    min_remain_hours = request.args.get('min_remain_hours', '')
+    max_remain_hours = request.args.get('max_remain_hours', '')
+    start_time = request.args.get('start_time', '')
+    end_time = request.args.get('end_time', '')
+    sort_by = request.args.get('sort_by', 'student')
+    sort_order = request.args.get('sort_order', 'asc')
+
+    # 查询所有学生-课程关联及相关信息
+    query = '''
+        SELECT s.name as student_name, c.name as course_name, sc.total_hours, sc.price,
+               IFNULL(SUM(r.hours_consumed), 0) as consumed_hours,
+               (sc.total_hours - IFNULL(SUM(r.hours_consumed), 0)) as remain_hours,
+               MIN(r.date) as first_class_time, MAX(r.date) as last_class_time
+        FROM student_course sc
+        JOIN student s ON sc.student_id = s.id
+        JOIN course c ON sc.course_id = c.id
+        LEFT JOIN record r ON r.student_id = s.id AND r.course_id = c.id
+        WHERE 1=1
+    '''
+    params = []
+    if student_name:
+        query += ' AND s.name LIKE ?'
+        params.append(f'%{student_name}%')
+    if course_name:
+        query += ' AND c.name LIKE ?'
+        params.append(f'%{course_name}%')
+    query += ' GROUP BY sc.id'
+    # 课时筛选
+    if min_total_hours:
+        query += ' HAVING total_hours >= ?'
+        params.append(min_total_hours)
+    if max_total_hours:
+        query += ' AND total_hours <= ?'
+        params.append(max_total_hours)
+    if min_remain_hours:
+        query += ' AND remain_hours >= ?'
+        params.append(min_remain_hours)
+    if max_remain_hours:
+        query += ' AND remain_hours <= ?'
+        params.append(max_remain_hours)
+    # 上课时间筛选
+    if start_time:
+        query += ' AND first_class_time >= ?'
+        params.append(start_time)
+    if end_time:
+        query += ' AND last_class_time <= ?'
+        params.append(end_time)
+    # 排序
+    sort_map = {
+        'student': 'student_name',
+        'course': 'course_name',
+        'total_hours': 'total_hours',
+        'remain_hours': 'remain_hours',
+        'first_class_time': 'first_class_time',
+        'last_class_time': 'last_class_time'
+    }
+    sort_col = sort_map.get(sort_by, 'student_name')
+    query += f' ORDER BY {sort_col} {"DESC" if sort_order=="desc" else "ASC"}'
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return render_template('student_course_manage.html', rows=rows, sort_by=sort_by, sort_order=sort_order, request=request)
 
 if __name__ == '__main__':
     import os

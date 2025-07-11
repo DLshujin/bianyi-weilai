@@ -3,3 +3,4 @@ apscheduler
 pandas
 openpyxl
 pypinyin
+gunicorn

@@ -98,6 +98,24 @@ cursor.execute('SELECT * FROM user WHERE username = ?', ('admin',))
 if not cursor.fetchone():
     cursor.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)', ('admin', '123456', 'admin'))
 
+# 插入默认老师账号
+cursor.execute('SELECT * FROM user WHERE username = ?', ('teacher1',))
+if not cursor.fetchone():
+    cursor.execute('INSERT INTO user (username, password, role, email) VALUES (?, ?, ?, ?)', ('teacher1', '123456', 'teacher', 'teacher1@example.com'))
+cursor.execute('SELECT * FROM user WHERE username = ?', ('teacher2',))
+if not cursor.fetchone():
+    cursor.execute('INSERT INTO user (username, password, role, email) VALUES (?, ?, ?, ?)', ('teacher2', '123456', 'teacher', 'teacher2@example.com'))
+
+# 插入默认学生账号和学生表
+cursor.execute('SELECT * FROM student WHERE name = ?', ('学生1',))
+if not cursor.fetchone():
+    cursor.execute('INSERT INTO student (name, contact) VALUES (?, ?)', ('学生1', '13800000001'))
+    cursor.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)', ('学生1', '13800000001', 'user'))
+cursor.execute('SELECT * FROM student WHERE name = ?', ('学生2',))
+if not cursor.fetchone():
+    cursor.execute('INSERT INTO student (name, contact) VALUES (?, ?)', ('学生2', '13800000002'))
+    cursor.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)', ('学生2', '13800000002', 'user'))
+
 conn.commit()
 conn.close()
 

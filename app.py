@@ -63,7 +63,7 @@ def admin_or_manager_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        if session.get('role') not in ['admin', 'manager']:
+        if session.get('role') not in ['admin', 'manager', 'teacher']:
             flash('无权限访问')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
@@ -123,13 +123,17 @@ def logout():
 @app.route('/', methods=['GET'])
 @login_required
 def index():
+    role = session.get('role')
+    username = session.get('username')
     conn = get_db_connection()
     search_name = request.args.get('search_name', '').strip().lower()
     course_filter = request.args.get('course_filter', '').strip()
     export = request.args.get('export', '')
-    # 获取所有学生
-    username = session.get('username')
-    students = conn.execute('SELECT * FROM student WHERE name=? OR contact=?', (username, username)).fetchall()
+    # 获取所有学生（仅学生角色查找）
+    if is_student(role):
+        students = conn.execute('SELECT * FROM student WHERE name=? OR contact=?', (username, username)).fetchall()
+    else:
+        students = []
     # 获取所有课程
     courses = {c['id']: c for c in conn.execute('SELECT * FROM course').fetchall()}
     course_list = list(courses.values())
@@ -145,8 +149,6 @@ def index():
         ''').fetchall()
     # 聚合每个学生的课程信息
     student_info = {}
-    role = session.get('role')
-    username = session.get('username')
     for s in students:
         name = s['name'].lower().replace(' ', '')
         pinyin_full = ''.join(lazy_pinyin(s['name'], style=Style.NORMAL)).lower()
@@ -259,7 +261,7 @@ def index():
     query += f' ORDER BY {sort_col} {"DESC" if sort_order=="desc" else "ASC"}'
     remain_rows = conn.execute(query, params).fetchall()
     conn.close()
-    return render_template('index.html', student_info=student_info, search_name=search_name, course_list=course_list, course_filter=course_filter, remain_rows=remain_rows, request=request, role=role)
+    return render_template('index.html', student_info=student_info, search_name=search_name, course_list=course_list, course_filter=course_filter, remain_rows=remain_rows, request=request, role=role, is_student=is_student, is_teacher=is_teacher)
 
 @app.route('/add', methods=['GET', 'POST'])
 @admin_or_manager_required
@@ -622,7 +624,7 @@ def add_schedule():
     courses = conn.execute('SELECT * FROM course').fetchall()
     students = conn.execute('SELECT * FROM student').fetchall()
     # 获取所有有邮箱的manager/admin账号
-    teachers = conn.execute("SELECT * FROM user WHERE role IN ('admin', 'manager') AND email IS NOT NULL AND email != ''").fetchall()
+    teachers = conn.execute("SELECT * FROM user WHERE role IN ('admin', 'manager', 'teacher') AND email IS NOT NULL AND email != ''").fetchall()
     if request.method == 'POST':
         course_id = request.form['course_id']
         student_ids = ','.join(request.form.getlist('student_ids'))

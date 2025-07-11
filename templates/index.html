@@ -247,13 +247,13 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
             <div class="card p-4 mb-4">
-                {% if role not in ['admin', 'manager'] %}
+                {% if is_student(role) %}
                 <h1 class="mb-4 text-center" style="width:100%;">
                   欢迎，
                   {% set student_name = None %}
                   {% if remain_rows and remain_rows|length > 0 %}
                     {% set student_name = remain_rows[0].student_name %}
-                  {% elif session.get('username') and session['role'] == 'user' %}
+                  {% elif session.get('username') and is_student(role) %}
                     {% set student_name = session['username'] %}
                   {% endif %}
                   {% if student_name %}
@@ -263,26 +263,7 @@
                   {% endif %}
                   <span style="font-size:1.5em; margin-left:0.3em;">😊🎉</span>
                 </h1>
-                {% else %}
-                <h1 class="mb-4"><i class="fas fa-graduation-cap me-2"></i>课消平台</h1>
-                {% endif %}
-                <div class="mb-3 d-flex flex-wrap gap-2">
-                    <!-- 课程剩余详情按钮已移除 -->
-                </div>
-                <!-- 课程剩余详情筛选与表格集成 -->
-                {% if session['role'] in ['admin', 'manager'] %}
-                <form class="row g-2 mb-3" method="get" action="/">
-                  <div class="col-md-3 col-6">
-                    <input type="text" class="form-control" name="student_name" placeholder="请输入学生姓名" value="{{ request.args.get('student_name','') }}">
-                  </div>
-                  <div class="col-md-3 col-6">
-                    <input type="text" class="form-control" name="course_name" placeholder="请输入课程名称" value="{{ request.args.get('course_name','') }}">
-                  </div>
-                  <div class="col-md-2 col-12">
-                    <button type="submit" class="btn btn-primary w-100">筛选</button>
-                  </div>
-                </form>
-                {% endif %}
+                <!-- 学生表格、详情等 -->
                 <div class="table-responsive">
                   <table class="table table-bordered table-hover align-middle">
                     <thead>
@@ -315,6 +296,66 @@
                     </tbody>
                   </table>
                 </div>
+                {% elif is_teacher(role) %}
+                <h1 class="mb-4 text-center"><i class="fas fa-chalkboard-teacher me-2"></i>欢迎使用课消平台，老师！</h1>
+                <div class="mb-4 text-center d-flex flex-wrap gap-3 justify-content-center">
+                  <a href="{{ url_for('students') }}" class="btn btn-primary"><i class="fas fa-users me-1"></i>学生管理</a>
+                  <a href="{{ url_for('schedule_list') }}" class="btn btn-primary"><i class="fas fa-calendar-alt me-1"></i>排课管理</a>
+                  <a href="{{ url_for('course_list') }}" class="btn btn-primary"><i class="fas fa-book me-1"></i>课程管理</a>
+                </div>
+                <!-- 课程剩余详情表格 -->
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>学生</th>
+                        <th>课程</th>
+                        <th>总课时</th>
+                        <th>已消耗课时</th>
+                        <th>剩余课时</th>
+                        <th>单价</th>
+                        <th>首次上课</th>
+                        <th>最近上课</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in remain_rows %}
+                      <tr>
+                        <td>{{ row.student_name }}</td>
+                        <td>{{ row.course_name }}</td>
+                        <td>{{ row.total_hours }}</td>
+                        <td>{{ row.consumed_hours }}</td>
+                        <td>{{ row.remain_hours }}</td>
+                        <td>{{ row.price }}</td>
+                        <td>{{ row.first_class_time or '-' }}</td>
+                        <td>{{ row.last_class_time or '-' }}</td>
+                      </tr>
+                      {% else %}
+                      <tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <h1 class="mb-4 text-center"><i class="fas fa-graduation-cap me-2"></i>课消平台</h1>
+                {% endif %}
+                <div class="mb-3 d-flex flex-wrap gap-2">
+                    <!-- 课程剩余详情按钮已移除 -->
+                </div>
+                <!-- 课程剩余详情筛选与表格集成 -->
+                {% if session['role'] in ['admin', 'manager'] %}
+                <form class="row g-2 mb-3" method="get" action="/">
+                  <div class="col-md-3 col-6">
+                    <input type="text" class="form-control" name="student_name" placeholder="请输入学生姓名" value="{{ request.args.get('student_name','') }}">
+                  </div>
+                  <div class="col-md-3 col-6">
+                    <input type="text" class="form-control" name="course_name" placeholder="请输入课程名称" value="{{ request.args.get('course_name','') }}">
+                  </div>
+                  <div class="col-md-2 col-12">
+                    <button type="submit" class="btn btn-primary w-100">筛选</button>
+                  </div>
+                </form>
+                {% endif %}
                 {% for sid, info in student_info.items() %}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">

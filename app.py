@@ -69,6 +69,18 @@ def admin_or_manager_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# 工具函数：角色映射
+
+def is_manager(role):
+    return role in ['admin', 'manager', 'teacher']
+
+def is_user(role):
+    return role in ['user', 'student']
+
+# 替换所有 ['admin', 'manager'] 为 is_manager(role)
+# 替换所有 'user' 为 is_user(role)
+# 替换 session['role'] == 'manager' 为 session['role'] in ['manager', 'teacher']
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -134,7 +146,7 @@ def index():
         pinyin_full = ''.join(lazy_pinyin(s['name'], style=Style.NORMAL)).lower()
         pinyin_abbr = ''.join([p[0] for p in lazy_pinyin(s['name'], style=Style.NORMAL)]).lower()
         # 权限过滤：普通用户只能看自己
-        if role not in ['admin', 'manager']:
+        if not is_manager(role):
             if s['name'] != username:
                 continue
         # 仅有搜索条件时才过滤
@@ -189,12 +201,14 @@ def index():
                 })
         df = pd.DataFrame(rows)
         output = BytesIO()
-        df.to_excel(output, index=False)
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name=table)
         output.seek(0)
-        return send_file(output, as_attachment=True, download_name='学生课程信息.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        filename = f'{table}.xlsx'
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     # 课程剩余详情筛选参数
-    student_name = request.args.get('student_name', '').strip() if role in ['admin', 'manager'] else ''
-    course_name = request.args.get('course_name', '').strip() if role in ['admin', 'manager'] else ''
+    student_name = request.args.get('student_name', '').strip() if is_manager(role) else ''
+    course_name = request.args.get('course_name', '').strip() if is_manager(role) else ''
     sort_by = request.args.get('sort_by', 'remain_hours')
     sort_order = request.args.get('sort_order', 'desc')
     # 查询所有学生-课程关联及相关信息
@@ -210,7 +224,7 @@ def index():
         WHERE 1=1
     '''
     params = []
-    if role not in ['admin', 'manager']:
+    if not is_manager(role):
         # 普通用户只能看到与自己手机号绑定的学生
         student = conn.execute('SELECT * FROM student WHERE contact=?', (username,)).fetchone()
         if student:
@@ -442,6 +456,8 @@ def export_table(table):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name=table)
+        writer.book = writer.book
+        writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)
     output.seek(0)
     filename = f'{table}.xlsx'
     return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -824,7 +840,7 @@ def send_email(to_email, subject, content, html=False):
         msg = MIMEText(content, 'html' if html else 'plain', 'utf-8')
         msg['From'] = from_email
         msg['To'] = to_email
-        msg['Subject'] = Header(subject, 'utf-8')
+        msg['Subject'] = str(subject)
         server = smtplib.SMTP_SSL('smtp.qq.com', 465)
         server.login(from_email, auth_code)
         server.sendmail(from_email, [to_email], msg.as_string())

@@ -35,9 +35,10 @@
                     <div class="mb-3">
                         <label for="role" class="form-label">角色</label>
                         <select class="form-select" id="role" name="role" required>
-                            <option value="user">普通用户</option>
+                            <option value="teacher">老师</option>
+                            <option value="student">学生</option>
                             {% if session['role'] == 'admin' %}
-                            <option value="manager">管理者</option>
+                            <option value="admin">管理员</option>
                             {% endif %}
                         </select>
                     </div>
@@ -58,7 +59,7 @@ window.onload = function() {
 }
 document.getElementById('role').addEventListener('change', function() {
     var emailInput = document.getElementById('email');
-    if (this.value === 'manager' || this.value === 'admin') {
+    if (this.value === 'admin') {
         emailInput.required = true;
     } else {
         emailInput.required = false;
